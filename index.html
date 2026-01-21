@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>terminal-tweaker // configure your environment</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="logo">terminal-tweaker</h1>
+            <p class="tagline">// configure your development environment</p>
+        </header>
+
+        <!-- Onboarding Screen -->
+        <section id="onboarding" class="screen active">
+            <div class="onboarding-content">
+                <h2>welcome_</h2>
+                <p class="subtitle">Let's set up your terminal environment</p>
+
+                <div class="option-cards">
+                    <div class="card" data-option="fresh">
+                        <div class="card-icon">✨</div>
+                        <h3>Start Fresh</h3>
+                        <p>Build a new configuration from scratch</p>
+                        <button class="btn btn-primary" onclick="app.startFresh()">Begin →</button>
+                    </div>
+
+                    <div class="card" data-option="existing">
+                        <div class="card-icon">🔧</div>
+                        <h3>Modify Existing</h3>
+                        <p>Import and enhance your current setup</p>
+                        <button class="btn btn-secondary" onclick="app.importExisting()">Import →</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Shell Selection -->
+        <section id="shell-selection" class="screen">
+            <div class="step-indicator">step 1 / 4</div>
+            <h2>select your shell_</h2>
+            <div class="options-grid">
+                <label class="option-box">
+                    <input type="radio" name="shell" value="bash" checked>
+                    <div class="option-content">
+                        <span class="option-title">bash</span>
+                        <span class="option-desc">Bourne Again Shell</span>
+                    </div>
+                </label>
+                <label class="option-box">
+                    <input type="radio" name="shell" value="zsh">
+                    <div class="option-content">
+                        <span class="option-title">zsh</span>
+                        <span class="option-desc">Z Shell</span>
+                    </div>
+                </label>
+            </div>
+            <button class="btn btn-primary btn-next" onclick="app.nextStep()">Continue →</button>
+        </section>
+
+        <!-- Editor Selection -->
+        <section id="editor-selection" class="screen">
+            <div class="step-indicator">step 2 / 4</div>
+            <h2>choose your editor_</h2>
+            <div class="options-grid">
+                <label class="option-box">
+                    <input type="radio" name="editor" value="vim">
+                    <div class="option-content">
+                        <span class="option-title">vim</span>
+                        <span class="option-desc">Ubiquitous modal editor</span>
+                    </div>
+                </label>
+                <label class="option-box">
+                    <input type="radio" name="editor" value="neovim">
+                    <div class="option-content">
+                        <span class="option-title">neovim</span>
+                        <span class="option-desc">Hyperextensible Vim-based</span>
+                    </div>
+                </label>
+                <label class="option-box">
+                    <input type="radio" name="editor" value="emacs">
+                    <div class="option-content">
+                        <span class="option-title">emacs</span>
+                        <span class="option-desc">Extensible, customizable</span>
+                    </div>
+                </label>
+                <label class="option-box">
+                    <input type="radio" name="editor" value="nano">
+                    <div class="option-content">
+                        <span class="option-title">nano</span>
+                        <span class="option-desc">Simple, straightforward</span>
+                    </div>
+                </label>
+                <label class="option-box">
+                    <input type="radio" name="editor" value="vscode">
+                    <div class="option-content">
+                        <span class="option-title">vscode</span>
+                        <span class="option-desc">Visual Studio Code</span>
+                    </div>
+                </label>
+            </div>
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" onclick="app.prevStep()">← Back</button>
+                <button class="btn btn-primary btn-next" onclick="app.nextStep()">Continue →</button>
+            </div>
+        </section>
+
+        <!-- Prompt Customization -->
+        <section id="prompt-customization" class="screen">
+            <div class="step-indicator">step 3 / 4</div>
+            <h2>customize your prompt_</h2>
+
+            <div class="preview-container">
+                <div class="terminal-preview" id="terminal-preview">
+                    <div class="terminal-line">
+                        <span id="prompt-preview"></span>
+                        <span class="cursor">_</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="customization-options">
+                <div class="option-group">
+                    <h3>Prompt Elements</h3>
+                    <label class="checkbox-option">
+                        <input type="checkbox" id="show-user" checked onchange="app.updatePrompt()">
+                        <span>Show user@hostname</span>
+                    </label>
+                    <label class="checkbox-option">
+                        <input type="checkbox" id="show-path" checked onchange="app.updatePrompt()">
+                        <span>Show current path</span>
+                    </label>
+                    <label class="checkbox-option">
+                        <input type="checkbox" id="show-git" checked onchange="app.updatePrompt()">
+                        <span>Show git branch</span>
+                    </label>
+                    <label class="checkbox-option">
+                        <input type="checkbox" id="show-time" onchange="app.updatePrompt()">
+                        <span>Show timestamp</span>
+                    </label>
+                </div>
+
+                <div class="option-group">
+                    <h3>Color Scheme</h3>
+                    <div class="color-schemes">
+                        <label class="color-scheme" data-scheme="default">
+                            <input type="radio" name="color-scheme" value="default" checked onchange="app.updatePrompt()">
+                            <span class="scheme-preview">
+                                <span style="color: #61afef">user</span>
+                                <span style="color: #98c379">~/path</span>
+                                <span style="color: #e06c75">(main)</span>
+                            </span>
+                            <span class="scheme-name">default</span>
+                        </label>
+                        <label class="color-scheme" data-scheme="dracula">
+                            <input type="radio" name="color-scheme" value="dracula" onchange="app.updatePrompt()">
+                            <span class="scheme-preview">
+                                <span style="color: #8be9fd">user</span>
+                                <span style="color: #50fa7b">~/path</span>
+                                <span style="color: #ff79c6">(main)</span>
+                            </span>
+                            <span class="scheme-name">dracula</span>
+                        </label>
+                        <label class="color-scheme" data-scheme="monokai">
+                            <input type="radio" name="color-scheme" value="monokai" onchange="app.updatePrompt()">
+                            <span class="scheme-preview">
+                                <span style="color: #66d9ef">user</span>
+                                <span style="color: #a6e22e">~/path</span>
+                                <span style="color: #f92672">(main)</span>
+                            </span>
+                            <span class="scheme-name">monokai</span>
+                        </label>
+                        <label class="color-scheme" data-scheme="gruvbox">
+                            <input type="radio" name="color-scheme" value="gruvbox" onchange="app.updatePrompt()">
+                            <span class="scheme-preview">
+                                <span style="color: #83a598">user</span>
+                                <span style="color: #b8bb26">~/path</span>
+                                <span style="color: #fb4934">(main)</span>
+                            </span>
+                            <span class="scheme-name">gruvbox</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" onclick="app.prevStep()">← Back</button>
+                <button class="btn btn-primary btn-next" onclick="app.nextStep()">Continue →</button>
+            </div>
+        </section>
+
+        <!-- Plugins & Extensions -->
+        <section id="plugins-selection" class="screen">
+            <div class="step-indicator">step 4 / 4</div>
+            <h2>select plugins & tools_</h2>
+            <p class="subtitle">Popular plugins for <span id="selected-editor-name"></span></p>
+
+            <div id="plugins-container" class="plugins-grid">
+                <!-- Plugins will be dynamically loaded here -->
+            </div>
+
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" onclick="app.prevStep()">← Back</button>
+                <button class="btn btn-primary btn-next" onclick="app.generateConfig()">Generate Config →</button>
+            </div>
+        </section>
+
+        <!-- Export Screen -->
+        <section id="export-screen" class="screen">
+            <h2>your configuration is ready_</h2>
+            <p class="subtitle">Download and install your custom terminal setup</p>
+
+            <div class="export-container">
+                <div class="file-preview">
+                    <div class="file-header">
+                        <span id="config-filename">.bash_profile</span>
+                        <button class="btn-copy" onclick="app.copyToClipboard()">Copy</button>
+                    </div>
+                    <pre id="config-content" class="code-block"></pre>
+                </div>
+
+                <div class="installation-instructions">
+                    <h3>Installation Steps:</h3>
+                    <ol id="install-steps">
+                        <li>Download the configuration file</li>
+                        <li>Move it to your home directory</li>
+                        <li>Restart your terminal or run <code>source ~/.bash_profile</code></li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="export-actions">
+                <button class="btn btn-primary" onclick="app.downloadConfig()">Download Config</button>
+                <button class="btn btn-secondary" onclick="app.restart()">Start Over</button>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
