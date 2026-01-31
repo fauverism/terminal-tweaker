@@ -1,6 +1,6 @@
-# terminal-tweaker
+# 🧑‍💻 terminal-tweaker
 
-A minimalist web-based configuration builder for customizing your terminal environment. Inspired by [skills.sh](https://skills.sh/) and [musicforprogramming.net](https://musicforprogramming.net).
+A minimalist web-based configuration builder for customizing your terminal environment. 
 
 ## Features
 

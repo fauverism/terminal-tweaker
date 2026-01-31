@@ -21,14 +21,12 @@
 
                 <div class="option-cards">
                     <div class="card" data-option="fresh">
-                        <div class="card-icon">✨</div>
                         <h3>Start Fresh</h3>
                         <p>Build a new configuration from scratch</p>
                         <button class="btn btn-primary" onclick="app.startFresh()">Begin →</button>
                     </div>
 
                     <div class="card" data-option="existing">
-                        <div class="card-icon">🔧</div>
                         <h3>Modify Existing</h3>
                         <p>Import and enhance your current setup</p>
                         <button class="btn btn-secondary" onclick="app.importExisting()">Import →</button>
@@ -39,7 +37,7 @@
 
         <!-- Shell Selection -->
         <section id="shell-selection" class="screen">
-            <div class="step-indicator">step 1 / 4</div>
+            <div class="step-indicator">step 1 / 5</div>
             <h2>select your shell_</h2>
             <div class="options-grid">
                 <label class="option-box">
@@ -62,7 +60,7 @@
 
         <!-- Editor Selection -->
         <section id="editor-selection" class="screen">
-            <div class="step-indicator">step 2 / 4</div>
+            <div class="step-indicator">step 2 / 5</div>
             <h2>choose your editor_</h2>
             <div class="options-grid">
                 <label class="option-box">
@@ -109,7 +107,7 @@
 
         <!-- Prompt Customization -->
         <section id="prompt-customization" class="screen">
-            <div class="step-indicator">step 3 / 4</div>
+            <div class="step-indicator">step 3 / 5</div>
             <h2>customize your prompt_</h2>
 
             <div class="preview-container">
@@ -191,9 +189,139 @@
             </div>
         </section>
 
+        <!-- Alias Builder -->
+        <section id="alias-builder" class="screen">
+            <div class="step-indicator">step 4 / 5</div>
+            <h2>configure aliases & settings_</h2>
+            <p class="subtitle">Speed up your workflow with shortcuts and shell tweaks</p>
+
+            <div class="alias-builder-layout">
+                <!-- Left Column: Preset Categories -->
+                <div class="alias-categories-panel">
+                    <div class="panel-header">
+                        <h3>Preset Aliases</h3>
+                        <div class="search-box">
+                            <input type="text" id="alias-search" placeholder="Search aliases..." oninput="app.filterAliases()">
+                        </div>
+                    </div>
+
+                    <div id="alias-categories" class="alias-categories">
+                        <!-- Categories will be dynamically loaded -->
+                    </div>
+                </div>
+
+                <!-- Right Column: Custom Aliases & Settings -->
+                <div class="alias-custom-panel">
+                    <!-- Custom Alias Builder -->
+                    <div class="custom-alias-section">
+                        <h3>Create Custom Alias</h3>
+                        <div class="custom-alias-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="alias-name">Shortcut</label>
+                                    <input type="text" id="alias-name" placeholder="e.g., myalias" oninput="app.validateAliasName()">
+                                    <span class="form-hint" id="alias-name-hint">Letters, numbers, hyphens only</span>
+                                </div>
+                                <div class="form-group form-group-wide">
+                                    <label for="alias-command">Command</label>
+                                    <input type="text" id="alias-command" placeholder="e.g., cd ~/projects && ls -la">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group form-group-wide">
+                                    <label for="alias-description">Description (optional)</label>
+                                    <input type="text" id="alias-description" placeholder="What does this alias do?">
+                                </div>
+                                <button class="btn btn-primary btn-add-alias" onclick="app.addCustomAlias()">+ Add Alias</button>
+                            </div>
+                        </div>
+
+                        <!-- Custom Aliases List -->
+                        <div id="custom-aliases-list" class="custom-aliases-list">
+                            <!-- Custom aliases will appear here -->
+                        </div>
+                    </div>
+
+                    <!-- Quick Settings -->
+                    <div class="quick-settings-section">
+                        <h3>Shell Settings</h3>
+                        <div class="settings-grid">
+                            <label class="setting-toggle">
+                                <input type="checkbox" id="setting-autocorrect" checked>
+                                <span class="toggle-label">Enable command auto-correction</span>
+                                <span class="toggle-hint">Suggests corrections for mistyped commands</span>
+                            </label>
+                            <label class="setting-toggle">
+                                <input type="checkbox" id="setting-case-insensitive" checked>
+                                <span class="toggle-label">Case-insensitive completion</span>
+                                <span class="toggle-hint">Tab completion ignores case</span>
+                            </label>
+                            <label class="setting-toggle">
+                                <input type="checkbox" id="setting-autocd">
+                                <span class="toggle-label">Auto-cd into directories</span>
+                                <span class="toggle-hint">Type directory name to cd into it</span>
+                            </label>
+                            <label class="setting-toggle">
+                                <input type="checkbox" id="setting-extended-glob" checked>
+                                <span class="toggle-label">Extended globbing patterns</span>
+                                <span class="toggle-hint">Enable advanced wildcards like **/*.js</span>
+                            </label>
+                            <label class="setting-toggle">
+                                <input type="checkbox" id="setting-history-share">
+                                <span class="toggle-label">Share history across sessions</span>
+                                <span class="toggle-hint">All terminals share command history</span>
+                            </label>
+                            <label class="setting-toggle">
+                                <input type="checkbox" id="setting-notify-long" checked>
+                                <span class="toggle-label">Notify on long-running commands</span>
+                                <span class="toggle-hint">Get notified when commands >30s finish</span>
+                            </label>
+                        </div>
+
+                        <div class="history-settings">
+                            <h4>History Configuration</h4>
+                            <div class="history-options">
+                                <div class="form-group">
+                                    <label for="history-size">History Size</label>
+                                    <select id="history-size">
+                                        <option value="1000">1,000 commands</option>
+                                        <option value="5000">5,000 commands</option>
+                                        <option value="10000" selected>10,000 commands</option>
+                                        <option value="50000">50,000 commands</option>
+                                        <option value="100000">100,000 commands</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="history-ignore">Ignore Patterns</label>
+                                    <select id="history-ignore">
+                                        <option value="none">Keep everything</option>
+                                        <option value="duplicates" selected>Skip duplicates</option>
+                                        <option value="spaces">Skip commands starting with space</option>
+                                        <option value="both">Skip both</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Selected Aliases Summary -->
+            <div class="selected-aliases-summary">
+                <span id="alias-count">0 aliases selected</span>
+                <button class="btn btn-secondary btn-small" onclick="app.clearAllAliases()">Clear All</button>
+                <button class="btn btn-secondary btn-small" onclick="app.selectRecommended()">Select Recommended</button>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" onclick="app.prevStep()">← Back</button>
+                <button class="btn btn-primary btn-next" onclick="app.nextStep()">Continue →</button>
+            </div>
+        </section>
+
         <!-- Plugins & Extensions -->
         <section id="plugins-selection" class="screen">
-            <div class="step-indicator">step 4 / 4</div>
+            <div class="step-indicator">step 5 / 5</div>
             <h2>select plugins & tools_</h2>
             <p class="subtitle">Popular plugins for <span id="selected-editor-name"></span></p>
 
