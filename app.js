@@ -262,35 +262,205 @@ const app = {
         ]
     },
 
-    // Color schemes for prompts
+    // Extended color schemes for prompts and terminal preview
     colorSchemes: {
         default: {
+            name: 'One Dark',
+            background: '#282c34',
+            foreground: '#abb2bf',
             user: '#61afef',
             path: '#98c379',
             git: '#e06c75',
-            time: '#c678dd'
+            time: '#c678dd',
+            command: '#e5c07b',
+            dir: '#61afef',
+            file: '#abb2bf',
+            exec: '#98c379',
+            error: '#e06c75',
+            success: '#98c379',
+            warning: '#e5c07b',
+            muted: '#5c6370'
         },
         dracula: {
+            name: 'Dracula',
+            background: '#282a36',
+            foreground: '#f8f8f2',
             user: '#8be9fd',
             path: '#50fa7b',
             git: '#ff79c6',
-            time: '#bd93f9'
+            time: '#bd93f9',
+            command: '#f1fa8c',
+            dir: '#8be9fd',
+            file: '#f8f8f2',
+            exec: '#50fa7b',
+            error: '#ff5555',
+            success: '#50fa7b',
+            warning: '#f1fa8c',
+            muted: '#6272a4'
         },
         monokai: {
+            name: 'Monokai',
+            background: '#272822',
+            foreground: '#f8f8f2',
             user: '#66d9ef',
             path: '#a6e22e',
             git: '#f92672',
-            time: '#ae81ff'
+            time: '#ae81ff',
+            command: '#e6db74',
+            dir: '#66d9ef',
+            file: '#f8f8f2',
+            exec: '#a6e22e',
+            error: '#f92672',
+            success: '#a6e22e',
+            warning: '#e6db74',
+            muted: '#75715e'
         },
         gruvbox: {
+            name: 'Gruvbox',
+            background: '#282828',
+            foreground: '#ebdbb2',
             user: '#83a598',
             path: '#b8bb26',
             git: '#fb4934',
-            time: '#d3869b'
+            time: '#d3869b',
+            command: '#fabd2f',
+            dir: '#83a598',
+            file: '#ebdbb2',
+            exec: '#b8bb26',
+            error: '#fb4934',
+            success: '#b8bb26',
+            warning: '#fabd2f',
+            muted: '#928374'
+        },
+        nord: {
+            name: 'Nord',
+            background: '#2e3440',
+            foreground: '#d8dee9',
+            user: '#88c0d0',
+            path: '#a3be8c',
+            git: '#bf616a',
+            time: '#b48ead',
+            command: '#ebcb8b',
+            dir: '#88c0d0',
+            file: '#d8dee9',
+            exec: '#a3be8c',
+            error: '#bf616a',
+            success: '#a3be8c',
+            warning: '#ebcb8b',
+            muted: '#4c566a'
+        },
+        solarized: {
+            name: 'Solarized',
+            background: '#002b36',
+            foreground: '#839496',
+            user: '#268bd2',
+            path: '#859900',
+            git: '#dc322f',
+            time: '#6c71c4',
+            command: '#b58900',
+            dir: '#268bd2',
+            file: '#839496',
+            exec: '#859900',
+            error: '#dc322f',
+            success: '#859900',
+            warning: '#b58900',
+            muted: '#586e75'
+        },
+        'tokyo-night': {
+            name: 'Tokyo Night',
+            background: '#1a1b26',
+            foreground: '#a9b1d6',
+            user: '#7aa2f7',
+            path: '#9ece6a',
+            git: '#f7768e',
+            time: '#bb9af7',
+            command: '#e0af68',
+            dir: '#7aa2f7',
+            file: '#a9b1d6',
+            exec: '#9ece6a',
+            error: '#f7768e',
+            success: '#9ece6a',
+            warning: '#e0af68',
+            muted: '#565f89'
+        },
+        catppuccin: {
+            name: 'Catppuccin',
+            background: '#1e1e2e',
+            foreground: '#cdd6f4',
+            user: '#89b4fa',
+            path: '#a6e3a1',
+            git: '#f38ba8',
+            time: '#cba6f7',
+            command: '#f9e2af',
+            dir: '#89b4fa',
+            file: '#cdd6f4',
+            exec: '#a6e3a1',
+            error: '#f38ba8',
+            success: '#a6e3a1',
+            warning: '#f9e2af',
+            muted: '#6c7086'
         }
     },
 
     init() {
+        this.renderColorSchemes();
+        this.updatePrompt();
+    },
+
+    // Render color scheme selector cards
+    renderColorSchemes() {
+        const container = document.getElementById('color-schemes-grid');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        Object.entries(this.colorSchemes).forEach(([schemeId, scheme]) => {
+            const isSelected = this.config.prompt.colorScheme === schemeId;
+
+            const card = document.createElement('label');
+            card.className = `color-scheme-card ${isSelected ? 'selected' : ''}`;
+            card.dataset.scheme = schemeId;
+
+            card.innerHTML = `
+                <input type="radio" name="color-scheme" value="${schemeId}" ${isSelected ? 'checked' : ''}>
+                <div class="scheme-mini-preview theme-${schemeId}">
+                    <span class="mini-prompt">
+                        <span style="color: ${scheme.user}">user</span>
+                        <span style="color: ${scheme.muted}">@host</span>
+                        <span style="color: ${scheme.foreground}"> </span>
+                        <span style="color: ${scheme.path}">~/code</span>
+                        <span style="color: ${scheme.foreground}"> </span>
+                        <span style="color: ${scheme.git}">(main)</span>
+                        <span style="color: ${scheme.foreground}"> $ </span>
+                        <span style="color: ${scheme.command}">git status</span>
+                    </span>
+                </div>
+                <div class="scheme-info">
+                    <span class="scheme-name">${scheme.name}</span>
+                    <span class="scheme-check">✓</span>
+                </div>
+            `;
+
+            card.addEventListener('click', () => {
+                this.selectColorScheme(schemeId);
+            });
+
+            container.appendChild(card);
+        });
+    },
+
+    selectColorScheme(schemeId) {
+        // Update radio button
+        const radio = document.querySelector(`input[name="color-scheme"][value="${schemeId}"]`);
+        if (radio) radio.checked = true;
+
+        // Update selected state on cards
+        document.querySelectorAll('.color-scheme-card').forEach(card => {
+            card.classList.toggle('selected', card.dataset.scheme === schemeId);
+        });
+
+        // Update config and re-render terminal
+        this.config.prompt.colorScheme = schemeId;
         this.updatePrompt();
     },
 
@@ -380,24 +550,125 @@ const app = {
 
         this.config.prompt = { showUser, showPath, showGit, showTime, colorScheme };
 
-        const colors = this.colorSchemes[colorScheme];
-        let promptHTML = '';
+        this.renderTerminalPreview();
+    },
+
+    // Build prompt HTML based on current settings
+    buildPromptHTML(colors, options = {}) {
+        const { showUser, showPath, showGit, showTime } = { ...this.config.prompt, ...options };
+        const path = options.path || '~/projects/my-app';
+        const branch = options.branch || 'main';
+
+        let html = '<span class="term-prompt">';
 
         if (showTime) {
-            promptHTML += `<span style="color: ${colors.time}">[18:52]</span> `;
+            html += `<span class="time" style="color: ${colors.time}">[18:52]</span> `;
         }
         if (showUser) {
-            promptHTML += `<span style="color: ${colors.user}">user@hostname</span>`;
+            html += `<span class="user" style="color: ${colors.user}">user</span>`;
+            html += `<span style="color: ${colors.muted}">@hostname</span>`;
         }
         if (showPath) {
-            promptHTML += ` <span style="color: ${colors.path}">~/projects/my-app</span>`;
+            html += ` <span class="path" style="color: ${colors.path}">${path}</span>`;
         }
         if (showGit) {
-            promptHTML += ` <span style="color: ${colors.git}">(main)</span>`;
+            html += ` <span class="git" style="color: ${colors.git}">(${branch})</span>`;
         }
-        promptHTML += ' $ ';
+        html += `<span class="symbol" style="color: ${colors.foreground}"> $ </span>`;
+        html += '</span>';
 
-        document.getElementById('prompt-preview').innerHTML = promptHTML;
+        return html;
+    },
+
+    // Render the full themed terminal preview
+    renderTerminalPreview() {
+        const terminalWindow = document.getElementById('terminal-window');
+        const terminalBody = document.getElementById('terminal-body');
+
+        if (!terminalWindow || !terminalBody) return;
+
+        const colorScheme = this.config.prompt.colorScheme;
+        const colors = this.colorSchemes[colorScheme];
+
+        // Update terminal window theme class
+        terminalWindow.className = `terminal-window theme-${colorScheme}`;
+
+        // Build terminal content with sample commands and output
+        const content = this.generateTerminalContent(colors);
+        terminalBody.innerHTML = content;
+    },
+
+    generateTerminalContent(colors) {
+        let html = '';
+
+        // Command 1: ls -la
+        html += `<div class="term-line command-line">`;
+        html += this.buildPromptHTML(colors, { path: '~/projects/my-app', branch: 'main' });
+        html += `<span class="term-command" style="color: ${colors.command}">ls -la</span>`;
+        html += `</div>`;
+
+        // Output for ls -la
+        html += `<div class="term-line"><span class="term-output" style="color: ${colors.foreground}">`;
+        html += `<span style="color: ${colors.muted}">total 48</span></span></div>`;
+
+        html += `<div class="term-line"><span class="term-output">`;
+        html += `<span style="color: ${colors.muted}">drwxr-xr-x</span>  `;
+        html += `<span style="color: ${colors.dir}">.</span>`;
+        html += `</span></div>`;
+
+        html += `<div class="term-line"><span class="term-output">`;
+        html += `<span style="color: ${colors.muted}">drwxr-xr-x</span>  `;
+        html += `<span style="color: ${colors.dir}">..</span>`;
+        html += `</span></div>`;
+
+        html += `<div class="term-line"><span class="term-output">`;
+        html += `<span style="color: ${colors.muted}">drwxr-xr-x</span>  `;
+        html += `<span style="color: ${colors.dir}">.git</span>`;
+        html += `</span></div>`;
+
+        html += `<div class="term-line"><span class="term-output">`;
+        html += `<span style="color: ${colors.muted}">-rw-r--r--</span>  `;
+        html += `<span style="color: ${colors.exec}">package.json</span>`;
+        html += `</span></div>`;
+
+        html += `<div class="term-line"><span class="term-output">`;
+        html += `<span style="color: ${colors.muted}">drwxr-xr-x</span>  `;
+        html += `<span style="color: ${colors.dir}">src</span>`;
+        html += `</span></div>`;
+
+        // Command 2: git status
+        html += `<div class="term-line command-line">`;
+        html += this.buildPromptHTML(colors, { path: '~/projects/my-app', branch: 'main' });
+        html += `<span class="term-command" style="color: ${colors.command}">git status</span>`;
+        html += `</div>`;
+
+        // Output for git status
+        html += `<div class="term-line"><span class="term-output">`;
+        html += `<span style="color: ${colors.foreground}">On branch </span>`;
+        html += `<span style="color: ${colors.git}">main</span>`;
+        html += `</span></div>`;
+
+        html += `<div class="term-line"><span class="term-output" style="color: ${colors.foreground}">`;
+        html += `Changes not staged for commit:`;
+        html += `</span></div>`;
+
+        html += `<div class="term-line"><span class="term-output">`;
+        html += `  <span style="color: ${colors.warning}">modified:</span>   `;
+        html += `<span style="color: ${colors.foreground}">src/app.js</span>`;
+        html += `</span></div>`;
+
+        html += `<div class="term-line"><span class="term-output">`;
+        html += `  <span style="color: ${colors.success}">new file:</span>   `;
+        html += `<span style="color: ${colors.foreground}">src/utils.js</span>`;
+        html += `</span></div>`;
+
+        // Command 3: Current prompt with cursor
+        html += `<div class="term-line command-line">`;
+        html += this.buildPromptHTML(colors, { path: '~/projects/my-app', branch: 'main' });
+        html += `<span class="term-cursor" style="background: ${colors.foreground}"></span>`;
+        html += `</div>`;
+
+        return html;
     },
 
     // ==========================================
