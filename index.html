@@ -21,17 +21,28 @@
 
                 <div class="option-cards">
                     <div class="card" data-option="fresh">
-                        <div class="card-icon">✨</div>
                         <h3>Start Fresh</h3>
                         <p>Build a new configuration from scratch</p>
                         <button class="btn btn-primary" onclick="app.startFresh()">Begin →</button>
                     </div>
 
                     <div class="card" data-option="existing">
-                        <div class="card-icon">🔧</div>
                         <h3>Modify Existing</h3>
                         <p>Import and enhance your current setup</p>
                         <button class="btn btn-secondary" onclick="app.importExisting()">Import →</button>
+                    </div>
+                </div>
+
+                <!-- Resume / Load from URL -->
+                <div class="resume-section" id="resume-section" style="display: none;">
+                    <div class="saved-config-notice">
+                        <span class="saved-icon">💾</span>
+                        <div class="saved-info">
+                            <span class="saved-title">Saved configuration found</span>
+                            <span class="saved-date" id="saved-date"></span>
+                        </div>
+                        <button class="btn btn-primary btn-small" onclick="app.resumeSavedConfig()">Resume</button>
+                        <button class="btn btn-secondary btn-small" onclick="app.clearSavedConfig()">Clear</button>
                     </div>
                 </div>
             </div>
@@ -39,7 +50,7 @@
 
         <!-- Shell Selection -->
         <section id="shell-selection" class="screen">
-            <div class="step-indicator">step 1 / 4</div>
+            <div class="step-indicator">step 1 / 5</div>
             <h2>select your shell_</h2>
             <div class="options-grid">
                 <label class="option-box">
@@ -56,13 +67,64 @@
                         <span class="option-desc">Z Shell</span>
                     </div>
                 </label>
+                <label class="option-box">
+                    <input type="radio" name="shell" value="fish">
+                    <div class="option-content">
+                        <span class="option-title">fish</span>
+                        <span class="option-desc">Friendly Interactive Shell</span>
+                    </div>
+                </label>
             </div>
+
+            <!-- Prompt Framework Selection -->
+            <div class="framework-selection" id="framework-selection">
+                <h3>Prompt Framework (Optional)</h3>
+                <p class="subtitle">Use a popular prompt framework for enhanced customization</p>
+                <div class="framework-options">
+                    <label class="framework-option">
+                        <input type="radio" name="framework" value="none" checked onchange="app.updateFrameworkSelection()">
+                        <div class="framework-content">
+                            <span class="framework-title">None (Manual)</span>
+                            <span class="framework-desc">Configure prompt manually with PS1/PROMPT</span>
+                        </div>
+                    </label>
+                    <label class="framework-option" id="ohmyzsh-option" style="display: none;">
+                        <input type="radio" name="framework" value="ohmyzsh" onchange="app.updateFrameworkSelection()">
+                        <div class="framework-content">
+                            <span class="framework-title">Oh My Zsh</span>
+                            <span class="framework-desc">Popular Zsh framework with themes & plugins</span>
+                        </div>
+                    </label>
+                    <label class="framework-option" id="ohmybash-option" style="display: none;">
+                        <input type="radio" name="framework" value="ohmybash" onchange="app.updateFrameworkSelection()">
+                        <div class="framework-content">
+                            <span class="framework-title">Oh My Bash</span>
+                            <span class="framework-desc">Bash framework inspired by Oh My Zsh</span>
+                        </div>
+                    </label>
+                    <label class="framework-option">
+                        <input type="radio" name="framework" value="starship" onchange="app.updateFrameworkSelection()">
+                        <div class="framework-content">
+                            <span class="framework-title">Starship</span>
+                            <span class="framework-desc">Minimal, fast, cross-shell prompt</span>
+                        </div>
+                    </label>
+                    <label class="framework-option" id="fisher-option" style="display: none;">
+                        <input type="radio" name="framework" value="fisher" onchange="app.updateFrameworkSelection()">
+                        <div class="framework-content">
+                            <span class="framework-title">Fisher</span>
+                            <span class="framework-desc">Plugin manager for Fish shell</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
             <button class="btn btn-primary btn-next" onclick="app.nextStep()">Continue →</button>
         </section>
 
         <!-- Editor Selection -->
         <section id="editor-selection" class="screen">
-            <div class="step-indicator">step 2 / 4</div>
+            <div class="step-indicator">step 2 / 5</div>
             <h2>choose your editor_</h2>
             <div class="options-grid">
                 <label class="option-box">
@@ -109,14 +171,21 @@
 
         <!-- Prompt Customization -->
         <section id="prompt-customization" class="screen">
-            <div class="step-indicator">step 3 / 4</div>
+            <div class="step-indicator">step 3 / 5</div>
             <h2>customize your prompt_</h2>
 
             <div class="preview-container">
-                <div class="terminal-preview" id="terminal-preview">
-                    <div class="terminal-line">
-                        <span id="prompt-preview"></span>
-                        <span class="cursor">_</span>
+                <div class="terminal-window" id="terminal-window">
+                    <div class="terminal-titlebar">
+                        <div class="terminal-buttons">
+                            <span class="terminal-btn close"></span>
+                            <span class="terminal-btn minimize"></span>
+                            <span class="terminal-btn maximize"></span>
+                        </div>
+                        <span class="terminal-title">terminal — zsh</span>
+                    </div>
+                    <div class="terminal-body" id="terminal-body">
+                        <!-- Terminal content will be dynamically generated -->
                     </div>
                 </div>
             </div>
@@ -144,43 +213,8 @@
 
                 <div class="option-group">
                     <h3>Color Scheme</h3>
-                    <div class="color-schemes">
-                        <label class="color-scheme" data-scheme="default">
-                            <input type="radio" name="color-scheme" value="default" checked onchange="app.updatePrompt()">
-                            <span class="scheme-preview">
-                                <span style="color: #61afef">user</span>
-                                <span style="color: #98c379">~/path</span>
-                                <span style="color: #e06c75">(main)</span>
-                            </span>
-                            <span class="scheme-name">default</span>
-                        </label>
-                        <label class="color-scheme" data-scheme="dracula">
-                            <input type="radio" name="color-scheme" value="dracula" onchange="app.updatePrompt()">
-                            <span class="scheme-preview">
-                                <span style="color: #8be9fd">user</span>
-                                <span style="color: #50fa7b">~/path</span>
-                                <span style="color: #ff79c6">(main)</span>
-                            </span>
-                            <span class="scheme-name">dracula</span>
-                        </label>
-                        <label class="color-scheme" data-scheme="monokai">
-                            <input type="radio" name="color-scheme" value="monokai" onchange="app.updatePrompt()">
-                            <span class="scheme-preview">
-                                <span style="color: #66d9ef">user</span>
-                                <span style="color: #a6e22e">~/path</span>
-                                <span style="color: #f92672">(main)</span>
-                            </span>
-                            <span class="scheme-name">monokai</span>
-                        </label>
-                        <label class="color-scheme" data-scheme="gruvbox">
-                            <input type="radio" name="color-scheme" value="gruvbox" onchange="app.updatePrompt()">
-                            <span class="scheme-preview">
-                                <span style="color: #83a598">user</span>
-                                <span style="color: #b8bb26">~/path</span>
-                                <span style="color: #fb4934">(main)</span>
-                            </span>
-                            <span class="scheme-name">gruvbox</span>
-                        </label>
+                    <div class="color-schemes-grid" id="color-schemes-grid">
+                        <!-- Color schemes will be dynamically generated -->
                     </div>
                 </div>
             </div>
@@ -191,9 +225,139 @@
             </div>
         </section>
 
+        <!-- Alias Builder -->
+        <section id="alias-builder" class="screen">
+            <div class="step-indicator">step 4 / 5</div>
+            <h2>configure aliases & settings_</h2>
+            <p class="subtitle">Speed up your workflow with shortcuts and shell tweaks</p>
+
+            <div class="alias-builder-layout">
+                <!-- Left Column: Preset Categories -->
+                <div class="alias-categories-panel">
+                    <div class="panel-header">
+                        <h3>Preset Aliases</h3>
+                        <div class="search-box">
+                            <input type="text" id="alias-search" placeholder="Search aliases..." oninput="app.filterAliases()">
+                        </div>
+                    </div>
+
+                    <div id="alias-categories" class="alias-categories">
+                        <!-- Categories will be dynamically loaded -->
+                    </div>
+                </div>
+
+                <!-- Right Column: Custom Aliases & Settings -->
+                <div class="alias-custom-panel">
+                    <!-- Custom Alias Builder -->
+                    <div class="custom-alias-section">
+                        <h3>Create Custom Alias</h3>
+                        <div class="custom-alias-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="alias-name">Shortcut</label>
+                                    <input type="text" id="alias-name" placeholder="e.g., myalias" oninput="app.validateAliasName()">
+                                    <span class="form-hint" id="alias-name-hint">Letters, numbers, hyphens only</span>
+                                </div>
+                                <div class="form-group form-group-wide">
+                                    <label for="alias-command">Command</label>
+                                    <input type="text" id="alias-command" placeholder="e.g., cd ~/projects && ls -la">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group form-group-wide">
+                                    <label for="alias-description">Description (optional)</label>
+                                    <input type="text" id="alias-description" placeholder="What does this alias do?">
+                                </div>
+                                <button class="btn btn-primary btn-add-alias" onclick="app.addCustomAlias()">+ Add Alias</button>
+                            </div>
+                        </div>
+
+                        <!-- Custom Aliases List -->
+                        <div id="custom-aliases-list" class="custom-aliases-list">
+                            <!-- Custom aliases will appear here -->
+                        </div>
+                    </div>
+
+                    <!-- Quick Settings -->
+                    <div class="quick-settings-section">
+                        <h3>Shell Settings</h3>
+                        <div class="settings-grid">
+                            <label class="setting-toggle">
+                                <input type="checkbox" id="setting-autocorrect" checked>
+                                <span class="toggle-label">Enable command auto-correction</span>
+                                <span class="toggle-hint">Suggests corrections for mistyped commands</span>
+                            </label>
+                            <label class="setting-toggle">
+                                <input type="checkbox" id="setting-case-insensitive" checked>
+                                <span class="toggle-label">Case-insensitive completion</span>
+                                <span class="toggle-hint">Tab completion ignores case</span>
+                            </label>
+                            <label class="setting-toggle">
+                                <input type="checkbox" id="setting-autocd">
+                                <span class="toggle-label">Auto-cd into directories</span>
+                                <span class="toggle-hint">Type directory name to cd into it</span>
+                            </label>
+                            <label class="setting-toggle">
+                                <input type="checkbox" id="setting-extended-glob" checked>
+                                <span class="toggle-label">Extended globbing patterns</span>
+                                <span class="toggle-hint">Enable advanced wildcards like **/*.js</span>
+                            </label>
+                            <label class="setting-toggle">
+                                <input type="checkbox" id="setting-history-share">
+                                <span class="toggle-label">Share history across sessions</span>
+                                <span class="toggle-hint">All terminals share command history</span>
+                            </label>
+                            <label class="setting-toggle">
+                                <input type="checkbox" id="setting-notify-long" checked>
+                                <span class="toggle-label">Notify on long-running commands</span>
+                                <span class="toggle-hint">Get notified when commands >30s finish</span>
+                            </label>
+                        </div>
+
+                        <div class="history-settings">
+                            <h4>History Configuration</h4>
+                            <div class="history-options">
+                                <div class="form-group">
+                                    <label for="history-size">History Size</label>
+                                    <select id="history-size">
+                                        <option value="1000">1,000 commands</option>
+                                        <option value="5000">5,000 commands</option>
+                                        <option value="10000" selected>10,000 commands</option>
+                                        <option value="50000">50,000 commands</option>
+                                        <option value="100000">100,000 commands</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="history-ignore">Ignore Patterns</label>
+                                    <select id="history-ignore">
+                                        <option value="none">Keep everything</option>
+                                        <option value="duplicates" selected>Skip duplicates</option>
+                                        <option value="spaces">Skip commands starting with space</option>
+                                        <option value="both">Skip both</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Selected Aliases Summary -->
+            <div class="selected-aliases-summary">
+                <span id="alias-count">0 aliases selected</span>
+                <button class="btn btn-secondary btn-small" onclick="app.clearAllAliases()">Clear All</button>
+                <button class="btn btn-secondary btn-small" onclick="app.selectRecommended()">Select Recommended</button>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" onclick="app.prevStep()">← Back</button>
+                <button class="btn btn-primary btn-next" onclick="app.nextStep()">Continue →</button>
+            </div>
+        </section>
+
         <!-- Plugins & Extensions -->
         <section id="plugins-selection" class="screen">
-            <div class="step-indicator">step 4 / 4</div>
+            <div class="step-indicator">step 5 / 5</div>
             <h2>select plugins & tools_</h2>
             <p class="subtitle">Popular plugins for <span id="selected-editor-name"></span></p>
 
@@ -211,6 +375,28 @@
         <section id="export-screen" class="screen">
             <h2>your configuration is ready_</h2>
             <p class="subtitle">Download and install your custom terminal setup</p>
+
+            <!-- Share URL Section -->
+            <div class="share-section">
+                <div class="share-header">
+                    <span class="share-icon">🔗</span>
+                    <span>Share your configuration</span>
+                </div>
+                <div class="share-url-container">
+                    <input type="text" id="share-url" readonly class="share-url-input">
+                    <button class="btn btn-secondary btn-small" onclick="app.copyShareUrl()">Copy URL</button>
+                </div>
+            </div>
+
+            <!-- Config Files Tabs (for multiple files like Starship) -->
+            <div class="config-tabs" id="config-tabs">
+                <button class="config-tab active" data-file="main" onclick="app.switchConfigTab('main')">
+                    <span id="main-tab-name">.bash_profile</span>
+                </button>
+                <button class="config-tab" data-file="starship" id="starship-tab" style="display: none;" onclick="app.switchConfigTab('starship')">
+                    starship.toml
+                </button>
+            </div>
 
             <div class="export-container">
                 <div class="file-preview">
@@ -233,6 +419,7 @@
 
             <div class="export-actions">
                 <button class="btn btn-primary" onclick="app.downloadConfig()">Download Config</button>
+                <button class="btn btn-primary" id="download-starship-btn" style="display: none;" onclick="app.downloadStarshipConfig()">Download starship.toml</button>
                 <button class="btn btn-secondary" onclick="app.restart()">Start Over</button>
             </div>
         </section>
