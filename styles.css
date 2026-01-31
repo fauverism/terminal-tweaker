@@ -1253,3 +1253,238 @@ h2 {
         flex-direction: column;
     }
 }
+
+/* ==========================================
+   FRAMEWORK SELECTION STYLES
+   ========================================== */
+
+.framework-selection {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.framework-selection h3 {
+    font-size: 1rem;
+    font-weight: 300;
+    color: var(--accent-primary);
+    margin-bottom: 0.5rem;
+}
+
+.framework-selection .subtitle {
+    margin-bottom: 1.5rem;
+}
+
+.framework-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.framework-option {
+    position: relative;
+    cursor: pointer;
+}
+
+.framework-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
+
+.framework-content {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 1.25rem;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.framework-option:hover .framework-content {
+    border-color: var(--accent-primary);
+}
+
+.framework-option input[type="radio"]:checked + .framework-content {
+    border-color: var(--accent-primary);
+    background: var(--bg-tertiary);
+    box-shadow: 0 0 0 3px rgba(255, 198, 0, 0.1);
+}
+
+.framework-title {
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.framework-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* ==========================================
+   RESUME/SAVED CONFIG SECTION
+   ========================================== */
+
+.resume-section {
+    margin-top: 2rem;
+}
+
+.saved-config-notice {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--accent-primary);
+    border-radius: 6px;
+}
+
+.saved-icon {
+    font-size: 1.5rem;
+}
+
+.saved-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.saved-title {
+    font-size: 0.95rem;
+    font-weight: 400;
+    color: var(--text-primary);
+}
+
+.saved-date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* ==========================================
+   SHARE URL SECTION
+   ========================================== */
+
+.share-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.share-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.share-icon {
+    font-size: 1rem;
+}
+
+.share-url-container {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.share-url-input {
+    flex: 1;
+    font-family: 'IBM Plex Mono', monospace;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 0.6rem 0.75rem;
+    color: var(--text-primary);
+    font-size: 0.8rem;
+}
+
+.share-url-input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+/* ==========================================
+   CONFIG FILE TABS
+   ========================================== */
+
+.config-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0;
+}
+
+.config-tab {
+    font-family: 'IBM Plex Mono', monospace;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    padding: 0.6rem 1rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.config-tab:hover {
+    color: var(--text-primary);
+}
+
+.config-tab.active {
+    background: var(--bg-tertiary);
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+.config-tabs + .export-container .file-preview {
+    border-top-left-radius: 0;
+}
+
+/* ==========================================
+   FISH SHELL SPECIFIC
+   ========================================== */
+
+.fish-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: rgba(255, 198, 0, 0.05);
+    border: 1px solid rgba(255, 198, 0, 0.2);
+    border-radius: 6px;
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.fish-note-icon {
+    font-size: 1.1rem;
+}
+
+/* ==========================================
+   RESPONSIVE UPDATES
+   ========================================== */
+
+@media (max-width: 768px) {
+    .framework-options {
+        grid-template-columns: 1fr;
+    }
+
+    .saved-config-notice {
+        flex-wrap: wrap;
+    }
+
+    .share-url-container {
+        flex-direction: column;
+    }
+
+    .config-tabs {
+        flex-wrap: wrap;
+    }
+}

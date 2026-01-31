@@ -2,9 +2,14 @@
 
 const app = {
     currentStep: 'onboarding',
+    STORAGE_KEY: 'terminal-tweaker-config',
+    currentConfigTab: 'main',
+    starshipConfig: '',
+
     config: {
         mode: null,
         shell: 'bash',
+        framework: 'none', // none, ohmyzsh, ohmybash, starship, fisher
         editor: null,
         prompt: {
             showUser: true,
@@ -403,8 +408,241 @@ const app = {
     },
 
     init() {
+        // Check for shared URL config first
+        if (this.loadFromUrl()) {
+            this.showScreen('shell-selection');
+            return;
+        }
+
+        // Check for saved config in localStorage
+        this.checkSavedConfig();
+
         this.renderColorSchemes();
         this.updatePrompt();
+    },
+
+    // ==========================================
+    // LOCAL STORAGE PERSISTENCE
+    // ==========================================
+
+    saveToLocalStorage() {
+        try {
+            const saveData = {
+                config: this.config,
+                savedAt: new Date().toISOString()
+            };
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(saveData));
+        } catch (e) {
+            console.warn('Could not save to localStorage:', e);
+        }
+    },
+
+    loadFromLocalStorage() {
+        try {
+            const saved = localStorage.getItem(this.STORAGE_KEY);
+            if (saved) {
+                const data = JSON.parse(saved);
+                return data;
+            }
+        } catch (e) {
+            console.warn('Could not load from localStorage:', e);
+        }
+        return null;
+    },
+
+    checkSavedConfig() {
+        const saved = this.loadFromLocalStorage();
+        if (saved && saved.config && saved.config.shell) {
+            const resumeSection = document.getElementById('resume-section');
+            const savedDate = document.getElementById('saved-date');
+            if (resumeSection && savedDate) {
+                resumeSection.style.display = 'block';
+                const date = new Date(saved.savedAt);
+                savedDate.textContent = `Saved ${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
+            }
+        }
+    },
+
+    resumeSavedConfig() {
+        const saved = this.loadFromLocalStorage();
+        if (saved && saved.config) {
+            this.config = { ...this.config, ...saved.config };
+            this.showScreen('shell-selection');
+
+            // Restore UI state
+            setTimeout(() => {
+                // Set shell radio
+                const shellRadio = document.querySelector(`input[name="shell"][value="${this.config.shell}"]`);
+                if (shellRadio) shellRadio.checked = true;
+                this.updateFrameworkVisibility();
+
+                // Set framework radio
+                if (this.config.framework) {
+                    const frameworkRadio = document.querySelector(`input[name="framework"][value="${this.config.framework}"]`);
+                    if (frameworkRadio) frameworkRadio.checked = true;
+                }
+            }, 100);
+        }
+    },
+
+    clearSavedConfig() {
+        try {
+            localStorage.removeItem(this.STORAGE_KEY);
+            document.getElementById('resume-section').style.display = 'none';
+        } catch (e) {
+            console.warn('Could not clear localStorage:', e);
+        }
+    },
+
+    // Auto-save on config changes
+    autoSave() {
+        this.saveToLocalStorage();
+    },
+
+    // ==========================================
+    // URL SHARING
+    // ==========================================
+
+    generateShareUrl() {
+        try {
+            const shareData = {
+                s: this.config.shell,
+                f: this.config.framework,
+                e: this.config.editor,
+                p: {
+                    u: this.config.prompt.showUser ? 1 : 0,
+                    p: this.config.prompt.showPath ? 1 : 0,
+                    g: this.config.prompt.showGit ? 1 : 0,
+                    t: this.config.prompt.showTime ? 1 : 0,
+                    c: this.config.prompt.colorScheme
+                },
+                a: this.config.aliases,
+                ca: this.config.customAliases.map(a => ({ n: a.shortcut, c: a.command, d: a.desc })),
+                st: {
+                    ac: this.config.settings.autocorrect ? 1 : 0,
+                    ci: this.config.settings.caseInsensitive ? 1 : 0,
+                    ad: this.config.settings.autocd ? 1 : 0,
+                    eg: this.config.settings.extendedGlob ? 1 : 0,
+                    hs: this.config.settings.historyShare ? 1 : 0,
+                    nl: this.config.settings.notifyLong ? 1 : 0,
+                    hz: this.config.settings.historySize,
+                    hi: this.config.settings.historyIgnore
+                },
+                pl: this.config.plugins
+            };
+
+            const encoded = btoa(JSON.stringify(shareData));
+            return `${window.location.origin}${window.location.pathname}?c=${encoded}`;
+        } catch (e) {
+            console.warn('Could not generate share URL:', e);
+            return window.location.href;
+        }
+    },
+
+    loadFromUrl() {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const configParam = params.get('c');
+
+            if (configParam) {
+                const shareData = JSON.parse(atob(configParam));
+
+                this.config.shell = shareData.s || 'bash';
+                this.config.framework = shareData.f || 'none';
+                this.config.editor = shareData.e || null;
+
+                if (shareData.p) {
+                    this.config.prompt = {
+                        showUser: shareData.p.u === 1,
+                        showPath: shareData.p.p === 1,
+                        showGit: shareData.p.g === 1,
+                        showTime: shareData.p.t === 1,
+                        colorScheme: shareData.p.c || 'default'
+                    };
+                }
+
+                if (shareData.a) {
+                    this.config.aliases = shareData.a;
+                }
+
+                if (shareData.ca) {
+                    this.config.customAliases = shareData.ca.map(a => ({
+                        id: `custom-${Date.now()}-${Math.random()}`,
+                        shortcut: a.n,
+                        command: a.c,
+                        desc: a.d
+                    }));
+                }
+
+                if (shareData.st) {
+                    this.config.settings = {
+                        autocorrect: shareData.st.ac === 1,
+                        caseInsensitive: shareData.st.ci === 1,
+                        autocd: shareData.st.ad === 1,
+                        extendedGlob: shareData.st.eg === 1,
+                        historyShare: shareData.st.hs === 1,
+                        notifyLong: shareData.st.nl === 1,
+                        historySize: shareData.st.hz || 10000,
+                        historyIgnore: shareData.st.hi || 'duplicates'
+                    };
+                }
+
+                if (shareData.pl) {
+                    this.config.plugins = shareData.pl;
+                }
+
+                // Clean URL
+                window.history.replaceState({}, '', window.location.pathname);
+                return true;
+            }
+        } catch (e) {
+            console.warn('Could not load from URL:', e);
+        }
+        return false;
+    },
+
+    copyShareUrl() {
+        const urlInput = document.getElementById('share-url');
+        urlInput.select();
+        navigator.clipboard.writeText(urlInput.value).then(() => {
+            const btn = urlInput.nextElementSibling;
+            const originalText = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => {
+                btn.textContent = originalText;
+            }, 2000);
+        });
+    },
+
+    // ==========================================
+    // FRAMEWORK SELECTION
+    // ==========================================
+
+    updateFrameworkVisibility() {
+        const shell = document.querySelector('input[name="shell"]:checked')?.value || 'bash';
+
+        // Show/hide relevant framework options based on shell
+        const ohmyzshOption = document.getElementById('ohmyzsh-option');
+        const ohmybashOption = document.getElementById('ohmybash-option');
+        const fisherOption = document.getElementById('fisher-option');
+
+        if (ohmyzshOption) ohmyzshOption.style.display = shell === 'zsh' ? 'block' : 'none';
+        if (ohmybashOption) ohmybashOption.style.display = shell === 'bash' ? 'block' : 'none';
+        if (fisherOption) fisherOption.style.display = shell === 'fish' ? 'block' : 'none';
+
+        // Reset framework to 'none' or 'starship' if current selection is hidden
+        const currentFramework = document.querySelector('input[name="framework"]:checked')?.value;
+        if ((currentFramework === 'ohmyzsh' && shell !== 'zsh') ||
+            (currentFramework === 'ohmybash' && shell !== 'bash') ||
+            (currentFramework === 'fisher' && shell !== 'fish')) {
+            document.querySelector('input[name="framework"][value="none"]').checked = true;
+        }
+    },
+
+    updateFrameworkSelection() {
+        const framework = document.querySelector('input[name="framework"]:checked')?.value || 'none';
+        this.config.framework = framework;
+        this.autoSave();
     },
 
     // Render color scheme selector cards
@@ -470,6 +708,21 @@ const app = {
         });
         document.getElementById(screenId).classList.add('active');
         this.currentStep = screenId;
+
+        // Handle screen-specific setup
+        if (screenId === 'shell-selection') {
+            this.setupShellSelection();
+        }
+    },
+
+    setupShellSelection() {
+        // Update framework visibility based on shell selection
+        this.updateFrameworkVisibility();
+
+        // Add change listeners to shell radios
+        document.querySelectorAll('input[name="shell"]').forEach(radio => {
+            radio.addEventListener('change', () => this.updateFrameworkVisibility());
+        });
     },
 
     startFresh() {
@@ -482,12 +735,12 @@ const app = {
         // Create file input for importing
         const input = document.createElement('input');
         input.type = 'file';
-        input.accept = '.bash_profile,.bashrc,.zshrc,.vimrc,.emacs';
+        input.accept = '.bash_profile,.bashrc,.zshrc,.vimrc,.emacs,config.fish,.config/fish/config.fish';
         input.onchange = (e) => {
             const file = e.target.files[0];
             const reader = new FileReader();
             reader.onload = (event) => {
-                this.parseExistingConfig(event.target.result);
+                this.parseExistingConfig(event.target.result, file.name);
                 this.showScreen('shell-selection');
             };
             reader.readAsText(file);
@@ -495,14 +748,93 @@ const app = {
         input.click();
     },
 
-    parseExistingConfig(content) {
-        // Basic parsing of existing config
-        // This is a simplified version - could be expanded
-        if (content.includes('PS1')) {
-            this.config.shell = 'bash';
-        } else if (content.includes('PROMPT')) {
+    // ==========================================
+    // IMPROVED CONFIG IMPORT PARSING
+    // ==========================================
+
+    parseExistingConfig(content, filename = '') {
+        // Detect shell from filename or content
+        if (filename.includes('fish') || content.includes('set -gx') || content.includes('function ') && content.includes('end')) {
+            this.config.shell = 'fish';
+        } else if (filename.includes('zsh') || content.includes('PROMPT=') || content.includes('setopt') || content.includes('autoload')) {
             this.config.shell = 'zsh';
+        } else if (content.includes('PS1=') || content.includes('shopt')) {
+            this.config.shell = 'bash';
         }
+
+        // Detect framework
+        if (content.includes('oh-my-zsh') || content.includes('ZSH_THEME')) {
+            this.config.framework = 'ohmyzsh';
+        } else if (content.includes('oh-my-bash') || content.includes('OSH_THEME')) {
+            this.config.framework = 'ohmybash';
+        } else if (content.includes('starship init')) {
+            this.config.framework = 'starship';
+        } else if (content.includes('fisher')) {
+            this.config.framework = 'fisher';
+        }
+
+        // Parse aliases
+        const aliasMatches = content.matchAll(/alias\s+([a-zA-Z0-9_-]+)=['"]([^'"]+)['"]/g);
+        for (const match of aliasMatches) {
+            const shortcut = match[1];
+            const command = match[2];
+
+            // Check if this is a preset alias
+            let found = false;
+            for (const category of Object.values(this.aliasCategories)) {
+                const preset = category.aliases.find(a => a.shortcut === shortcut);
+                if (preset && !this.config.aliases.includes(preset.id)) {
+                    this.config.aliases.push(preset.id);
+                    found = true;
+                    break;
+                }
+            }
+
+            // If not a preset, add as custom
+            if (!found && shortcut && command) {
+                const existing = this.config.customAliases.find(a => a.shortcut === shortcut);
+                if (!existing) {
+                    this.config.customAliases.push({
+                        id: `custom-import-${Date.now()}-${Math.random()}`,
+                        shortcut,
+                        command,
+                        desc: 'Imported alias'
+                    });
+                }
+            }
+        }
+
+        // Parse editor
+        const editorMatch = content.match(/export\s+EDITOR=['"]?([a-z]+)['"]?/i);
+        if (editorMatch) {
+            const editor = editorMatch[1].toLowerCase();
+            if (['vim', 'neovim', 'nvim', 'emacs', 'nano', 'code', 'vscode'].includes(editor)) {
+                this.config.editor = editor === 'nvim' ? 'neovim' : editor === 'code' ? 'vscode' : editor;
+            }
+        }
+
+        // Parse history size
+        const histSizeMatch = content.match(/(?:export\s+)?HISTSIZE=(\d+)/);
+        if (histSizeMatch) {
+            this.config.settings.historySize = parseInt(histSizeMatch[1]);
+        }
+
+        // Detect prompt settings from PS1/PROMPT
+        if (content.includes('\\u') || content.includes('%n')) {
+            this.config.prompt.showUser = true;
+        }
+        if (content.includes('\\w') || content.includes('%~')) {
+            this.config.prompt.showPath = true;
+        }
+        if (content.includes('git') || content.includes('vcs_info')) {
+            this.config.prompt.showGit = true;
+        }
+        if (content.includes('\\t') || content.includes('%T') || content.includes('%*')) {
+            this.config.prompt.showTime = true;
+        }
+
+        // Save parsed config
+        this.autoSave();
     },
 
     nextStep() {
@@ -511,6 +843,8 @@ const app = {
 
         if (this.currentStep === 'shell-selection') {
             this.config.shell = document.querySelector('input[name="shell"]:checked').value;
+            this.config.framework = document.querySelector('input[name="framework"]:checked')?.value || 'none';
+            this.autoSave();
         } else if (this.currentStep === 'editor-selection') {
             const selectedEditor = document.querySelector('input[name="editor"]:checked');
             if (!selectedEditor) {
@@ -518,12 +852,15 @@ const app = {
                 return;
             }
             this.config.editor = selectedEditor.value;
+            this.autoSave();
         } else if (this.currentStep === 'prompt-customization') {
             // Load alias builder when moving to it
+            this.autoSave();
             this.loadAliasBuilder();
         } else if (this.currentStep === 'alias-builder') {
             // Save settings before moving on
             this.saveAliasSettings();
+            this.autoSave();
             this.loadPlugins();
         }
 
@@ -1055,23 +1392,444 @@ const app = {
         const configContent = this.buildConfigFile();
         document.getElementById('config-content').textContent = configContent;
 
-        // Update filename
-        const filename = this.config.shell === 'bash' ? '.bash_profile' : '.zshrc';
+        // Update filename based on shell
+        const filenames = {
+            bash: '.bash_profile',
+            zsh: '.zshrc',
+            fish: 'config.fish'
+        };
+        const filename = filenames[this.config.shell] || '.bash_profile';
         document.getElementById('config-filename').textContent = filename;
+        document.getElementById('main-tab-name').textContent = filename;
+
+        // Handle Starship config
+        const starshipTab = document.getElementById('starship-tab');
+        const downloadStarshipBtn = document.getElementById('download-starship-btn');
+
+        if (this.config.framework === 'starship') {
+            this.starshipConfig = this.buildStarshipConfig();
+            starshipTab.style.display = 'block';
+            downloadStarshipBtn.style.display = 'inline-block';
+        } else {
+            starshipTab.style.display = 'none';
+            downloadStarshipBtn.style.display = 'none';
+        }
+
+        // Generate share URL
+        const shareUrl = this.generateShareUrl();
+        document.getElementById('share-url').value = shareUrl;
 
         // Update installation steps
         this.updateInstallSteps();
 
+        // Final save
+        this.autoSave();
+
         this.showScreen('export-screen');
     },
 
-    buildConfigFile() {
-        const { shell, editor, prompt, plugins, aliases, customAliases, settings } = this.config;
+    switchConfigTab(tabName) {
+        this.currentConfigTab = tabName;
+
+        // Update tab styles
+        document.querySelectorAll('.config-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.file === tabName);
+        });
+
+        // Update content
+        const contentEl = document.getElementById('config-content');
+        const filenameEl = document.getElementById('config-filename');
+
+        if (tabName === 'starship') {
+            contentEl.textContent = this.starshipConfig;
+            filenameEl.textContent = 'starship.toml';
+        } else {
+            contentEl.textContent = this.buildConfigFile();
+            const filenames = { bash: '.bash_profile', zsh: '.zshrc', fish: 'config.fish' };
+            filenameEl.textContent = filenames[this.config.shell] || '.bash_profile';
+        }
+    },
+
+    downloadStarshipConfig() {
+        const content = this.starshipConfig;
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'starship.toml';
+        a.click();
+        window.URL.revokeObjectURL(url);
+    },
+
+    buildStarshipConfig() {
+        const { prompt } = this.config;
         const colors = this.colorSchemes[prompt.colorScheme];
+
+        let config = '# Starship Configuration\n';
+        config += '# Generated by terminal-tweaker\n';
+        config += '# Place in ~/.config/starship.toml\n\n';
+
+        config += '# Prompt format\n';
+        config += 'format = """';
+
+        if (prompt.showTime) {
+            config += '$time';
+        }
+        if (prompt.showUser) {
+            config += '$username$hostname';
+        }
+        if (prompt.showPath) {
+            config += '$directory';
+        }
+        if (prompt.showGit) {
+            config += '$git_branch$git_status';
+        }
+        config += '$character"""\n\n';
+
+        // Time module
+        if (prompt.showTime) {
+            config += '[time]\n';
+            config += 'disabled = false\n';
+            config += `style = "${colors.time}"\n`;
+            config += 'format = "[$time]($style) "\n\n';
+        }
+
+        // Username
+        if (prompt.showUser) {
+            config += '[username]\n';
+            config += 'show_always = true\n';
+            config += `style_user = "${colors.user}"\n`;
+            config += 'format = "[$user]($style_user)"\n\n';
+
+            config += '[hostname]\n';
+            config += 'ssh_only = false\n';
+            config += 'style = "dimmed white"\n';
+            config += 'format = "[@$hostname]($style) "\n\n';
+        }
+
+        // Directory
+        if (prompt.showPath) {
+            config += '[directory]\n';
+            config += `style = "${colors.path}"\n`;
+            config += 'truncation_length = 3\n';
+            config += 'truncate_to_repo = true\n\n';
+        }
+
+        // Git branch
+        if (prompt.showGit) {
+            config += '[git_branch]\n';
+            config += `style = "${colors.git}"\n`;
+            config += 'format = "[($branch)]($style) "\n\n';
+
+            config += '[git_status]\n';
+            config += 'style = "bold yellow"\n\n';
+        }
+
+        // Character (prompt symbol)
+        config += '[character]\n';
+        config += 'success_symbol = "[\\$](bold green)"\n';
+        config += 'error_symbol = "[\\$](bold red)"\n';
+
+        return config;
+    },
+
+    buildFishConfig() {
+        const { editor, prompt, aliases, customAliases, settings } = this.config;
+        const colors = this.colorSchemes[prompt.colorScheme];
+
+        let config = '# Fish Shell Configuration\n';
+        config += '# Generated by terminal-tweaker\n';
+        config += `# Date: ${new Date().toLocaleDateString()}\n`;
+        config += '# Save this file to ~/.config/fish/config.fish\n\n';
+
+        // Editor configuration
+        config += '# Editor Configuration\n';
+        config += `set -gx EDITOR "${editor}"\n`;
+        config += `set -gx VISUAL "${editor}"\n\n`;
+
+        // History configuration
+        config += '# History Configuration\n';
+        config += `set -g fish_history_size ${settings.historySize}\n\n`;
+
+        // Custom prompt function
+        if (this.config.framework !== 'starship') {
+            config += '# Custom Prompt\n';
+            config += 'function fish_prompt\n';
+
+            if (prompt.showTime) {
+                config += '    set_color magenta\n';
+                config += '    echo -n "["(date "+%H:%M:%S")"] "\n';
+            }
+
+            if (prompt.showUser) {
+                config += '    set_color blue\n';
+                config += '    echo -n (whoami)"@"(hostname -s)" "\n';
+            }
+
+            if (prompt.showPath) {
+                config += '    set_color green\n';
+                config += '    echo -n (prompt_pwd)" "\n';
+            }
+
+            if (prompt.showGit) {
+                config += '    # Git branch\n';
+                config += '    set -l git_branch (git branch 2>/dev/null | sed -n \'/\\* /s///p\')\n';
+                config += '    if test -n "$git_branch"\n';
+                config += '        set_color red\n';
+                config += '        echo -n "($git_branch) "\n';
+                config += '    end\n';
+            }
+
+            config += '    set_color normal\n';
+            config += '    echo -n "$ "\n';
+            config += 'end\n\n';
+        } else {
+            config += '# Initialize Starship prompt\n';
+            config += 'starship init fish | source\n\n';
+        }
+
+        // Aliases (Fish uses abbr or functions)
+        config += '# ==========================================\n';
+        config += '# ABBREVIATIONS & ALIASES\n';
+        config += '# ==========================================\n\n';
+
+        // Group aliases by category
+        Object.entries(this.aliasCategories).forEach(([, category]) => {
+            const selectedAliases = category.aliases.filter(a => aliases.includes(a.id));
+
+            if (selectedAliases.length > 0) {
+                config += `# ${category.name}\n`;
+
+                selectedAliases.forEach(alias => {
+                    if (alias.command.startsWith('function ')) {
+                        // Convert bash function to fish function
+                        const fnMatch = alias.command.match(/function\s+\w+\(\)\s*\{(.+)\}/);
+                        if (fnMatch) {
+                            config += `function ${alias.shortcut}\n`;
+                            config += `    ${fnMatch[1].trim().replace(/;/g, '\n    ')}\n`;
+                            config += 'end\n';
+                        }
+                    } else if (alias.command.includes('cd ')) {
+                        // Navigation aliases work as abbreviations
+                        config += `abbr -a ${alias.shortcut} '${alias.command}'\n`;
+                    } else {
+                        config += `abbr -a ${alias.shortcut} '${alias.command}'\n`;
+                    }
+                });
+                config += '\n';
+            }
+        });
+
+        // Custom aliases
+        if (customAliases.length > 0) {
+            config += '# Custom Aliases\n';
+            customAliases.forEach(alias => {
+                config += `abbr -a ${alias.shortcut} '${alias.command}'\n`;
+            });
+            config += '\n';
+        }
+
+        // Fish-specific features
+        config += '# Fish Features\n';
+        if (settings.caseInsensitive) {
+            config += '# Case-insensitive completion (default in Fish)\n';
+        }
+
+        // Color support
+        config += '\n# Enable color support\n';
+        config += 'set -gx CLICOLOR 1\n';
+
+        return config;
+    },
+
+    buildOhMyZshConfig() {
+        const { editor, prompt, aliases, customAliases, settings } = this.config;
+        const colors = this.colorSchemes[prompt.colorScheme];
+
+        let config = '#!/bin/zsh\n';
+        config += '# Oh-My-Zsh Configuration\n';
+        config += '# Generated by terminal-tweaker\n';
+        config += `# Date: ${new Date().toLocaleDateString()}\n\n`;
+
+        // Oh-My-Zsh setup
+        config += '# Path to Oh-My-Zsh installation\n';
+        config += 'export ZSH="$HOME/.oh-my-zsh"\n\n';
+
+        // Theme selection
+        config += '# Theme Configuration\n';
+        if (prompt.colorScheme === 'default') {
+            config += 'ZSH_THEME="robbyrussell"\n\n';
+        } else {
+            config += `# Using ${prompt.colorScheme} color scheme\n`;
+            config += 'ZSH_THEME="agnoster"  # Works well with custom colors\n\n';
+        }
+
+        // Plugins
+        config += '# Plugins\n';
+        config += 'plugins=(\n';
+        config += '    git\n';
+        if (settings.autocorrect) {
+            config += '    zsh-autosuggestions\n';
+        }
+        config += '    z\n';
+        config += '    colored-man-pages\n';
+        config += ')\n\n';
+
+        config += 'source $ZSH/oh-my-zsh.sh\n\n';
+
+        // Editor
+        config += '# Editor Configuration\n';
+        config += `export EDITOR="${editor}"\n`;
+        config += `export VISUAL="${editor}"\n\n`;
+
+        // History
+        config += '# History Configuration\n';
+        config += `HISTSIZE=${settings.historySize}\n`;
+        config += `SAVEHIST=${settings.historySize}\n`;
+        if (settings.historyIgnore === 'duplicates' || settings.historyIgnore === 'both') {
+            config += 'setopt HIST_IGNORE_DUPS\n';
+        }
+        config += '\n';
+
+        // Aliases
+        config += '# ==========================================\n';
+        config += '# CUSTOM ALIASES\n';
+        config += '# ==========================================\n\n';
+
+        Object.entries(this.aliasCategories).forEach(([, category]) => {
+            const selectedAliases = category.aliases.filter(a => aliases.includes(a.id));
+
+            if (selectedAliases.length > 0) {
+                config += `# ${category.name}\n`;
+                selectedAliases.forEach(alias => {
+                    if (!alias.command.startsWith('function ')) {
+                        config += `alias ${alias.shortcut}="${alias.command}"\n`;
+                    }
+                });
+                config += '\n';
+            }
+        });
+
+        if (customAliases.length > 0) {
+            config += '# Custom Aliases\n';
+            customAliases.forEach(alias => {
+                config += `alias ${alias.shortcut}="${alias.command}"\n`;
+            });
+            config += '\n';
+        }
+
+        return config;
+    },
+
+    buildOhMyBashConfig() {
+        const { editor, prompt, aliases, customAliases, settings } = this.config;
+
+        let config = '#!/bin/bash\n';
+        config += '# Oh-My-Bash Configuration\n';
+        config += '# Generated by terminal-tweaker\n';
+        config += `# Date: ${new Date().toLocaleDateString()}\n\n`;
+
+        // Oh-My-Bash setup
+        config += '# Path to Oh-My-Bash installation\n';
+        config += 'export OSH="$HOME/.oh-my-bash"\n\n';
+
+        // Theme
+        config += '# Theme Configuration\n';
+        config += 'OSH_THEME="powerline"\n\n';
+
+        // Plugins
+        config += '# Plugins\n';
+        config += 'plugins=(\n';
+        config += '    git\n';
+        config += '    bashmarks\n';
+        config += ')\n\n';
+
+        // Aliases
+        config += 'aliases=(\n';
+        config += '    general\n';
+        config += ')\n\n';
+
+        // Completions
+        config += 'completions=(\n';
+        config += '    git\n';
+        config += '    ssh\n';
+        config += ')\n\n';
+
+        config += 'source "$OSH/oh-my-bash.sh"\n\n';
+
+        // Editor
+        config += '# Editor Configuration\n';
+        config += `export EDITOR="${editor}"\n`;
+        config += `export VISUAL="${editor}"\n\n`;
+
+        // History
+        config += '# History Configuration\n';
+        config += `export HISTSIZE=${settings.historySize}\n`;
+        config += `export HISTFILESIZE=${settings.historySize * 2}\n`;
+        if (settings.historyIgnore === 'duplicates') {
+            config += 'export HISTCONTROL=ignoredups:erasedups\n';
+        }
+        config += '\n';
+
+        // Aliases
+        config += '# ==========================================\n';
+        config += '# CUSTOM ALIASES\n';
+        config += '# ==========================================\n\n';
+
+        Object.entries(this.aliasCategories).forEach(([, category]) => {
+            const selectedAliases = category.aliases.filter(a => aliases.includes(a.id));
+
+            if (selectedAliases.length > 0) {
+                config += `# ${category.name}\n`;
+                selectedAliases.forEach(alias => {
+                    if (!alias.command.startsWith('function ')) {
+                        config += `alias ${alias.shortcut}="${alias.command}"\n`;
+                    }
+                });
+                config += '\n';
+            }
+        });
+
+        if (customAliases.length > 0) {
+            config += '# Custom Aliases\n';
+            customAliases.forEach(alias => {
+                config += `alias ${alias.shortcut}="${alias.command}"\n`;
+            });
+            config += '\n';
+        }
+
+        return config;
+    },
+
+    buildConfigFile() {
+        const { shell, framework, editor, prompt, plugins, aliases, customAliases, settings } = this.config;
+        const colors = this.colorSchemes[prompt.colorScheme];
+
+        // Fish shell has completely different syntax
+        if (shell === 'fish') {
+            return this.buildFishConfig();
+        }
+
+        // Handle framework-specific configs
+        if (framework === 'ohmyzsh') {
+            return this.buildOhMyZshConfig();
+        } else if (framework === 'ohmybash') {
+            return this.buildOhMyBashConfig();
+        }
 
         let config = shell === 'bash' ? '#!/bin/bash\n' : '#!/bin/zsh\n';
         config += '# Generated by terminal-tweaker\n';
         config += `# Date: ${new Date().toLocaleDateString()}\n\n`;
+
+        // Add Starship init if using Starship
+        if (framework === 'starship') {
+            config += '# Initialize Starship prompt\n';
+            if (shell === 'bash') {
+                config += 'eval "$(starship init bash)"\n\n';
+            } else {
+                config += 'eval "$(starship init zsh)"\n\n';
+            }
+        }
 
         // Shell settings (zsh-specific options)
         if (shell === 'zsh') {
@@ -1093,7 +1851,7 @@ const app = {
                 config += 'setopt SHARE_HISTORY     # Share history across sessions\n';
             }
             config += '\n';
-        } else {
+        } else if (shell === 'bash') {
             // Bash-specific options
             config += '# Shell Options\n';
             if (settings.autocorrect) {
@@ -1108,25 +1866,26 @@ const app = {
             config += '\n';
         }
 
-        // Build prompt
-        config += '# Custom Prompt Configuration\n';
+        // Build prompt (skip if using Starship)
+        if (framework !== 'starship') {
+            config += '# Custom Prompt Configuration\n';
 
-        if (shell === 'bash') {
-            if (prompt.showGit) {
-                config += '\n# Git branch in prompt\n';
-                config += 'parse_git_branch() {\n';
-                config += '    git branch 2> /dev/null | sed -e \'/^[^*]/d\' -e \'s/* \\(.*\\)/ (\\1)/\'\n';
-                config += '}\n\n';
-            }
+            if (shell === 'bash') {
+                if (prompt.showGit) {
+                    config += '\n# Git branch in prompt\n';
+                    config += 'parse_git_branch() {\n';
+                    config += '    git branch 2> /dev/null | sed -e \'/^[^*]/d\' -e \'s/* \\(.*\\)/ (\\1)/\'\n';
+                    config += '}\n\n';
+                }
 
-            let ps1 = 'PS1="';
+                let ps1 = 'PS1="';
 
-            if (prompt.showTime) {
-                ps1 += '\\[\\033[38;2;199;120;221m\\][\\t]\\[\\033[0m\\] ';
-            }
-            if (prompt.showUser) {
-                const rgb = this.hexToRgb(colors.user);
-                ps1 += `\\[\\033[38;2;${rgb.r};${rgb.g};${rgb.b}m\\]\\u@\\h\\[\\033[0m\\]`;
+                if (prompt.showTime) {
+                    ps1 += '\\[\\033[38;2;199;120;221m\\][\\t]\\[\\033[0m\\] ';
+                }
+                if (prompt.showUser) {
+                    const rgb = this.hexToRgb(colors.user);
+                    ps1 += `\\[\\033[38;2;${rgb.r};${rgb.g};${rgb.b}m\\]\\u@\\h\\[\\033[0m\\]`;
             }
             if (prompt.showPath) {
                 const rgb = this.hexToRgb(colors.path);
@@ -1163,6 +1922,7 @@ const app = {
             }
             prompt_str += ' $ "\n';
             config += prompt_str;
+        }
         }
 
         // Editor configuration
@@ -1343,17 +2103,58 @@ const app = {
     },
 
     updateInstallSteps() {
-        const { shell, editor } = this.config;
-        const filename = shell === 'bash' ? '.bash_profile' : '.zshrc';
+        const { shell, framework, editor } = this.config;
 
-        let steps = `
-            <li>Download the configuration file using the button below</li>
-            <li>Move it to your home directory: <code>mv ~/Downloads/${filename} ~/${filename}</code></li>
-            <li>Reload your shell: <code>source ~/${filename}</code></li>
-        `;
+        // Determine the correct filename
+        let filename, filepath;
+        if (shell === 'fish') {
+            filename = 'config.fish';
+            filepath = '~/.config/fish/config.fish';
+        } else if (shell === 'bash') {
+            filename = '.bash_profile';
+            filepath = '~/.bash_profile';
+        } else {
+            filename = '.zshrc';
+            filepath = '~/.zshrc';
+        }
 
+        let steps = '';
+
+        // Framework-specific installation
+        if (framework === 'ohmyzsh') {
+            steps += `<li><strong>Install Oh-My-Zsh first:</strong><br><code>sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"</code></li>`;
+            steps += `<li>Download the configuration file using the button below</li>`;
+            steps += `<li>Replace your .zshrc: <code>mv ~/Downloads/${filename} ${filepath}</code></li>`;
+            steps += `<li>Install recommended plugins:<br>
+                <code>git clone https://github.com/zsh-users/zsh-autosuggestions \${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions</code></li>`;
+        } else if (framework === 'ohmybash') {
+            steps += `<li><strong>Install Oh-My-Bash first:</strong><br><code>bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh)"</code></li>`;
+            steps += `<li>Download the configuration file using the button below</li>`;
+            steps += `<li>Replace your .bashrc: <code>mv ~/Downloads/${filename} ~/.bashrc</code></li>`;
+        } else if (framework === 'starship') {
+            steps += `<li><strong>Install Starship first:</strong><br><code>curl -sS https://starship.rs/install.sh | sh</code></li>`;
+            steps += `<li>Download the shell configuration file</li>`;
+            steps += `<li>Move it to your home directory: <code>mv ~/Downloads/${filename} ${filepath}</code></li>`;
+            steps += `<li>Download the Starship config (starship.toml) and move it:<br><code>mv ~/Downloads/starship.toml ~/.config/starship.toml</code></li>`;
+        } else if (framework === 'fisher' && shell === 'fish') {
+            steps += `<li><strong>Install Fisher (Fish plugin manager):</strong><br><code>curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher</code></li>`;
+            steps += `<li>Download the configuration file</li>`;
+            steps += `<li>Create config directory if needed: <code>mkdir -p ~/.config/fish</code></li>`;
+            steps += `<li>Move config: <code>mv ~/Downloads/${filename} ${filepath}</code></li>`;
+        } else if (shell === 'fish') {
+            steps += `<li>Download the configuration file</li>`;
+            steps += `<li>Create config directory: <code>mkdir -p ~/.config/fish</code></li>`;
+            steps += `<li>Move it: <code>mv ~/Downloads/${filename} ${filepath}</code></li>`;
+            steps += `<li>Restart Fish or open a new terminal</li>`;
+        } else {
+            steps += `<li>Download the configuration file using the button below</li>`;
+            steps += `<li>Move it to your home directory: <code>mv ~/Downloads/${filename} ${filepath}</code></li>`;
+            steps += `<li>Reload your shell: <code>source ${filepath}</code></li>`;
+        }
+
+        // Editor-specific steps
         if (editor === 'vim' || editor === 'neovim') {
-            steps += `<li>Install vim-plug for plugin management: <code>curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim</code></li>`;
+            steps += `<li>Install vim-plug for plugin management:<br><code>curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim</code></li>`;
             steps += `<li>Create your .vimrc file with the suggested configuration</li>`;
         } else if (editor === 'emacs') {
             steps += `<li>Add the suggested configuration to your ~/.emacs file</li>`;
@@ -1373,7 +2174,19 @@ const app = {
 
     downloadConfig() {
         const content = document.getElementById('config-content').textContent;
-        const filename = this.config.shell === 'bash' ? '.bash_profile' : '.zshrc';
+        const { shell, framework } = this.config;
+
+        // Determine the correct filename
+        let filename;
+        if (shell === 'fish') {
+            filename = 'config.fish';
+        } else if (framework === 'ohmybash') {
+            filename = '.bashrc';
+        } else if (shell === 'bash') {
+            filename = '.bash_profile';
+        } else {
+            filename = '.zshrc';
+        }
 
         const blob = new Blob([content], { type: 'text/plain' });
         const url = window.URL.createObjectURL(blob);
@@ -1400,6 +2213,7 @@ const app = {
         this.config = {
             mode: null,
             shell: 'bash',
+            framework: 'none',
             editor: null,
             prompt: {
                 showUser: true,

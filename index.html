@@ -32,6 +32,19 @@
                         <button class="btn btn-secondary" onclick="app.importExisting()">Import →</button>
                     </div>
                 </div>
+
+                <!-- Resume / Load from URL -->
+                <div class="resume-section" id="resume-section" style="display: none;">
+                    <div class="saved-config-notice">
+                        <span class="saved-icon">💾</span>
+                        <div class="saved-info">
+                            <span class="saved-title">Saved configuration found</span>
+                            <span class="saved-date" id="saved-date"></span>
+                        </div>
+                        <button class="btn btn-primary btn-small" onclick="app.resumeSavedConfig()">Resume</button>
+                        <button class="btn btn-secondary btn-small" onclick="app.clearSavedConfig()">Clear</button>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -54,7 +67,58 @@
                         <span class="option-desc">Z Shell</span>
                     </div>
                 </label>
+                <label class="option-box">
+                    <input type="radio" name="shell" value="fish">
+                    <div class="option-content">
+                        <span class="option-title">fish</span>
+                        <span class="option-desc">Friendly Interactive Shell</span>
+                    </div>
+                </label>
             </div>
+
+            <!-- Prompt Framework Selection -->
+            <div class="framework-selection" id="framework-selection">
+                <h3>Prompt Framework (Optional)</h3>
+                <p class="subtitle">Use a popular prompt framework for enhanced customization</p>
+                <div class="framework-options">
+                    <label class="framework-option">
+                        <input type="radio" name="framework" value="none" checked onchange="app.updateFrameworkSelection()">
+                        <div class="framework-content">
+                            <span class="framework-title">None (Manual)</span>
+                            <span class="framework-desc">Configure prompt manually with PS1/PROMPT</span>
+                        </div>
+                    </label>
+                    <label class="framework-option" id="ohmyzsh-option" style="display: none;">
+                        <input type="radio" name="framework" value="ohmyzsh" onchange="app.updateFrameworkSelection()">
+                        <div class="framework-content">
+                            <span class="framework-title">Oh My Zsh</span>
+                            <span class="framework-desc">Popular Zsh framework with themes & plugins</span>
+                        </div>
+                    </label>
+                    <label class="framework-option" id="ohmybash-option" style="display: none;">
+                        <input type="radio" name="framework" value="ohmybash" onchange="app.updateFrameworkSelection()">
+                        <div class="framework-content">
+                            <span class="framework-title">Oh My Bash</span>
+                            <span class="framework-desc">Bash framework inspired by Oh My Zsh</span>
+                        </div>
+                    </label>
+                    <label class="framework-option">
+                        <input type="radio" name="framework" value="starship" onchange="app.updateFrameworkSelection()">
+                        <div class="framework-content">
+                            <span class="framework-title">Starship</span>
+                            <span class="framework-desc">Minimal, fast, cross-shell prompt</span>
+                        </div>
+                    </label>
+                    <label class="framework-option" id="fisher-option" style="display: none;">
+                        <input type="radio" name="framework" value="fisher" onchange="app.updateFrameworkSelection()">
+                        <div class="framework-content">
+                            <span class="framework-title">Fisher</span>
+                            <span class="framework-desc">Plugin manager for Fish shell</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
             <button class="btn btn-primary btn-next" onclick="app.nextStep()">Continue →</button>
         </section>
 
@@ -312,6 +376,28 @@
             <h2>your configuration is ready_</h2>
             <p class="subtitle">Download and install your custom terminal setup</p>
 
+            <!-- Share URL Section -->
+            <div class="share-section">
+                <div class="share-header">
+                    <span class="share-icon">🔗</span>
+                    <span>Share your configuration</span>
+                </div>
+                <div class="share-url-container">
+                    <input type="text" id="share-url" readonly class="share-url-input">
+                    <button class="btn btn-secondary btn-small" onclick="app.copyShareUrl()">Copy URL</button>
+                </div>
+            </div>
+
+            <!-- Config Files Tabs (for multiple files like Starship) -->
+            <div class="config-tabs" id="config-tabs">
+                <button class="config-tab active" data-file="main" onclick="app.switchConfigTab('main')">
+                    <span id="main-tab-name">.bash_profile</span>
+                </button>
+                <button class="config-tab" data-file="starship" id="starship-tab" style="display: none;" onclick="app.switchConfigTab('starship')">
+                    starship.toml
+                </button>
+            </div>
+
             <div class="export-container">
                 <div class="file-preview">
                     <div class="file-header">
@@ -333,6 +419,7 @@
 
             <div class="export-actions">
                 <button class="btn btn-primary" onclick="app.downloadConfig()">Download Config</button>
+                <button class="btn btn-primary" id="download-starship-btn" style="display: none;" onclick="app.downloadStarshipConfig()">Download starship.toml</button>
                 <button class="btn btn-secondary" onclick="app.restart()">Start Over</button>
             </div>
         </section>
