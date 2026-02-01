@@ -2237,6 +2237,10 @@ const app = {
             }
         };
         this.showScreen('onboarding');
+    },
+
+    goHome() {
+        this.showScreen('onboarding');
     }
 };
 
@@ -2244,3 +2248,333 @@ const app = {
 document.addEventListener('DOMContentLoaded', () => {
     app.init();
 });
+
+// Easter egg - call terminalTweaker() in console to activate
+function terminalTweaker() {
+    const asciiArt = `
+ ████████╗███████╗██████╗ ███╗   ███╗██╗███╗   ██╗ █████╗ ██╗
+ ╚══██╔══╝██╔════╝██╔══██╗████╗ ████║██║████╗  ██║██╔══██╗██║
+    ██║   █████╗  ██████╔╝██╔████╔██║██║██╔██╗ ██║███████║██║
+    ██║   ██╔══╝  ██╔══██╗██║╚██╔╝██║██║██║╚██╗██║██╔══██║██║
+    ██║   ███████╗██║  ██║██║ ╚═╝ ██║██║██║ ╚████║██║  ██║███████╗
+    ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝
+
+ ████████╗██╗    ██╗███████╗ █████╗ ██╗  ██╗███████╗██████╗
+ ╚══██╔══╝██║    ██║██╔════╝██╔══██╗██║ ██╔╝██╔════╝██╔══██╗
+    ██║   ██║ █╗ ██║█████╗  ███████║█████╔╝ █████╗  ██████╔╝
+    ██║   ██║███╗██║██╔══╝  ██╔══██║██╔═██╗ ██╔══╝  ██╔══██╗
+    ██║   ╚███╔███╔╝███████╗██║  ██║██║  ██╗███████╗██║  ██║
+    ╚═╝    ╚══╝╚══╝ ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
+`;
+
+    // Create modal overlay
+    const modal = document.createElement('div');
+    modal.id = 'easter-egg-modal';
+    modal.innerHTML = `
+        <div class="ee-backdrop"></div>
+        <div class="ee-content">
+            <div class="ee-close" onclick="closeEasterEgg()">&times;</div>
+            <div class="ee-scanlines"></div>
+            <div class="ee-glitch-container">
+                <pre class="ee-ascii" data-text="${asciiArt.replace(/"/g, '&quot;')}">${asciiArt}</pre>
+            </div>
+            <div class="ee-gif-container">
+                <img src="img/terminal.gif" alt="Terminal" class="ee-gif" onerror="this.style.display='none'">
+            </div>
+            <div class="ee-particles"></div>
+            <div class="ee-message">You found the secret!</div>
+        </div>
+    `;
+
+    // Create particles
+    const particlesContainer = modal.querySelector('.ee-particles');
+    for (let i = 0; i < 50; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'ee-particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 3 + 's';
+        particle.style.animationDuration = (Math.random() * 2 + 2) + 's';
+        particlesContainer.appendChild(particle);
+    }
+
+    // Add styles
+    const styles = document.createElement('style');
+    styles.id = 'easter-egg-styles';
+    styles.textContent = `
+        #easter-egg-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ee-backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            animation: ee-fade-in 0.3s ease;
+        }
+
+        .ee-content {
+            position: relative;
+            text-align: center;
+            padding: 2rem;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow: auto;
+        }
+
+        .ee-close {
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            font-size: 2rem;
+            color: #fff;
+            cursor: pointer;
+            z-index: 10;
+            transition: transform 0.2s, color 0.2s;
+        }
+
+        .ee-close:hover {
+            transform: scale(1.2);
+            color: #ffc600;
+        }
+
+        .ee-scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            animation: ee-scanline-move 8s linear infinite;
+        }
+
+        .ee-glitch-container {
+            position: relative;
+            animation: ee-float 3s ease-in-out infinite;
+        }
+
+        .ee-ascii {
+            font-family: 'IBM Plex Mono', 'Courier New', monospace;
+            font-size: clamp(0.3rem, 1.2vw, 0.7rem);
+            line-height: 1.1;
+            color: #ffc600;
+            text-shadow:
+                0 0 5px #ffc600,
+                0 0 10px #ffc600,
+                0 0 20px #ffc600,
+                0 0 40px #ff8800;
+            white-space: pre;
+            animation: ee-glow 2s ease-in-out infinite alternate, ee-glitch 0.3s infinite;
+            position: relative;
+        }
+
+        .ee-ascii::before,
+        .ee-ascii::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.8;
+        }
+
+        .ee-ascii::before {
+            color: #ff0080;
+            animation: ee-glitch-1 0.2s infinite;
+            clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+        }
+
+        .ee-ascii::after {
+            color: #00ffff;
+            animation: ee-glitch-2 0.3s infinite;
+            clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+        }
+
+        .ee-gif-container {
+            margin-top: 2rem;
+            animation: ee-bounce 0.5s ease infinite alternate;
+        }
+
+        .ee-gif {
+            max-width: 300px;
+            border-radius: 8px;
+            box-shadow:
+                0 0 20px rgba(255, 198, 0, 0.5),
+                0 0 40px rgba(255, 198, 0, 0.3);
+            animation: ee-rotate-hue 5s linear infinite;
+        }
+
+        .ee-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .ee-particle {
+            position: absolute;
+            bottom: -20px;
+            width: 8px;
+            height: 8px;
+            background: #ffc600;
+            border-radius: 50%;
+            animation: ee-particle-rise 3s ease-in infinite;
+            box-shadow: 0 0 10px #ffc600;
+        }
+
+        .ee-particle:nth-child(odd) {
+            background: #ff0080;
+            box-shadow: 0 0 10px #ff0080;
+        }
+
+        .ee-particle:nth-child(3n) {
+            background: #00ffff;
+            box-shadow: 0 0 10px #00ffff;
+        }
+
+        .ee-message {
+            margin-top: 2rem;
+            font-size: 1.5rem;
+            color: #00ff00;
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            animation: ee-blink 1s step-end infinite, ee-rainbow 3s linear infinite;
+        }
+
+        @keyframes ee-fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes ee-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes ee-glow {
+            from { text-shadow: 0 0 5px #ffc600, 0 0 10px #ffc600, 0 0 20px #ffc600; }
+            to { text-shadow: 0 0 10px #ffc600, 0 0 20px #ffc600, 0 0 40px #ffc600, 0 0 80px #ff8800; }
+        }
+
+        @keyframes ee-glitch {
+            0%, 90%, 100% { transform: translate(0); }
+            92% { transform: translate(-2px, 1px); }
+            94% { transform: translate(2px, -1px); }
+            96% { transform: translate(-1px, 2px); }
+            98% { transform: translate(1px, -2px); }
+        }
+
+        @keyframes ee-glitch-1 {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-3px, 0); }
+            40% { transform: translate(3px, 0); }
+            60% { transform: translate(-2px, 0); }
+            80% { transform: translate(2px, 0); }
+        }
+
+        @keyframes ee-glitch-2 {
+            0%, 100% { transform: translate(0); }
+            25% { transform: translate(2px, 0); }
+            50% { transform: translate(-3px, 0); }
+            75% { transform: translate(1px, 0); }
+        }
+
+        @keyframes ee-bounce {
+            from { transform: scale(1); }
+            to { transform: scale(1.02); }
+        }
+
+        @keyframes ee-rotate-hue {
+            from { filter: hue-rotate(0deg); }
+            to { filter: hue-rotate(360deg); }
+        }
+
+        @keyframes ee-particle-rise {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes ee-scanline-move {
+            from { background-position: 0 0; }
+            to { background-position: 0 100%; }
+        }
+
+        @keyframes ee-blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.7; }
+        }
+
+        @keyframes ee-rainbow {
+            0% { color: #ff0000; }
+            16% { color: #ff8800; }
+            33% { color: #ffff00; }
+            50% { color: #00ff00; }
+            66% { color: #00ffff; }
+            83% { color: #ff00ff; }
+            100% { color: #ff0000; }
+        }
+    `;
+
+    document.head.appendChild(styles);
+    document.body.appendChild(modal);
+
+    // Play sound effect (optional - console beep)
+    console.log('%c🎉 EASTER EGG ACTIVATED! 🎉', 'font-size: 24px; color: #ffc600; text-shadow: 0 0 10px #ffc600;');
+    console.log('%cYou discovered the terminal-tweaker secret mode!', 'font-size: 14px; color: #00ff00;');
+
+    // Close on escape key
+    const escHandler = (e) => {
+        if (e.key === 'Escape') {
+            closeEasterEgg();
+            document.removeEventListener('keydown', escHandler);
+        }
+    };
+    document.addEventListener('keydown', escHandler);
+
+    // Close on backdrop click
+    modal.querySelector('.ee-backdrop').addEventListener('click', closeEasterEgg);
+}
+
+function closeEasterEgg() {
+    const modal = document.getElementById('easter-egg-modal');
+    const styles = document.getElementById('easter-egg-styles');
+    if (modal) {
+        modal.style.animation = 'ee-fade-out 0.3s ease forwards';
+        setTimeout(() => {
+            modal.remove();
+            if (styles) styles.remove();
+        }, 300);
+    }
+}
+
+// Add fade out animation dynamically
+const fadeOutStyle = document.createElement('style');
+fadeOutStyle.textContent = '@keyframes ee-fade-out { to { opacity: 0; } }';
+document.head.appendChild(fadeOutStyle);
