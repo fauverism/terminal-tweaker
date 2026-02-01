@@ -1663,3 +1663,40 @@ h2 {
         grid-template-columns: 1fr;
     }
 }
+
+/* ==========================================
+   SITE FOOTER
+   ========================================== */
+
+.site-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0.75rem 2rem;
+    background: var(--bg-primary);
+    border-top: 1px solid var(--border-color);
+    text-align: left;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    z-index: 100;
+}
+
+.site-footer a {
+    color: var(--accent-primary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.site-footer a:hover {
+    color: var(--accent-secondary);
+    text-decoration: underline;
+}
+
+/* Add padding to container to prevent content being hidden behind footer */
+.container {
+    padding-bottom: 3rem;
+}
+.feature-card p {
+  color: var(--text-secondary);
+}
