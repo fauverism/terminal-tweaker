@@ -2,6 +2,8 @@
 
 A minimalist web-based configuration builder for customizing your terminal environment. 
 
+## https://terminal-tweaker.vercel.app/
+
 ## Features
 
 - **Interactive Onboarding**: Choose to start fresh or import existing configurations
@@ -17,7 +19,7 @@ A minimalist web-based configuration builder for customizing your terminal envir
 - **Live Preview**: See your prompt in real-time as you customize
 - **Export Ready Configs**: Download complete configuration files
 
-## Quick Start
+## Quick Start from GH
 
 1. Open `index.html` in your browser
 2. Choose your starting point (fresh or import existing)

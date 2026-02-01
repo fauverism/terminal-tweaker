@@ -9,16 +9,18 @@
 <body>
     <div class="container">
         <header class="header">
-            <h1 class="logo">terminal-tweaker</h1>
-            <p class="tagline">// configure your development environment</p>
+            <h1 class="logo" onclick="app.goHome()" style="cursor: pointer;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="logo-icon"><path d="m7 11 2-2-2-2"/><path d="M11 13h4"/><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/></svg>
+                terminal-tweaker
+            </h1>
+            <p class="tagline">// config your dev env</p>
+            <button class="btn-learn-more" onclick="app.showFeatures()">Learn More</button>
         </header>
 
         <!-- Onboarding Screen -->
         <section id="onboarding" class="screen active">
             <div class="onboarding-content">
-                <h2>welcome_</h2>
-                <p class="subtitle">Let's set up your terminal environment</p>
-
+                <h2>Let's get set up</h2>
                 <div class="option-cards">
                     <div class="card" data-option="fresh">
                         <h3>Start Fresh</h3>
@@ -118,8 +120,8 @@
                     </label>
                 </div>
             </div>
-
-            <button class="btn btn-primary btn-next" onclick="app.nextStep()">Continue →</button>
+            
+            <button class="btn btn-primary btn-next" onclick="app.nextStep()" style="margin: 30px 0">Continue →</button>
         </section>
 
         <!-- Editor Selection -->
@@ -424,6 +426,78 @@
             </div>
         </section>
     </div>
+
+    <!-- Features Modal -->
+    <div id="features-modal" class="features-modal" style="display: none;">
+        <div class="features-backdrop" onclick="app.hideFeatures()"></div>
+        <div class="features-content">
+            <button class="features-close" onclick="app.hideFeatures()">&times;</button>
+            <h2>terminal-tweaker features_</h2>
+            <p class="features-intro">Everything you need to craft your perfect terminal environment</p>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-chevron-right-icon lucide-square-chevron-right"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m10 8 4 4-4 4"/></svg></div>
+                    <h3>Multi-Shell Support</h3>
+                    <p>Configure Bash, Zsh, or Fish with shell-specific optimizations and syntax</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wallpaper-icon lucide-wallpaper"><path d="M12 17v4"/><path d="M8 21h8"/><path d="m9 17 6.1-6.1a2 2 0 0 1 2.81.01L22 15"/><circle cx="8" cy="9" r="2"/><rect x="2" y="3" width="20" height="14" rx="2"/></svg></div>
+                    <h3>Theme Preview</h3>
+                    <p>8 beautiful color schemes with live terminal preview - One Dark, Dracula, Nord, and more</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap-icon lucide-zap"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg></div>
+                    <h3>90+ Preset Aliases</h3>
+                    <p>Git, Docker, npm, Kubernetes, navigation shortcuts - all organized by category</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wrench-icon lucide-wrench"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg></div>
+                    <h3>Custom Aliases</h3>
+                    <p>Create your own shortcuts with an intuitive builder and validation</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pocket-knife-icon lucide-pocket-knife"><path d="M3 2v1c0 1 2 1 2 2S3 6 3 7s2 1 2 2-2 1-2 2 2 1 2 2"/><path d="M18 6h.01"/><path d="M6 18h.01"/><path d="M20.83 8.83a4 4 0 0 0-5.66-5.66l-12 12a4 4 0 1 0 5.66 5.66Z"/><path d="M18 11.66V22a4 4 0 0 0 4-4V6"/></svg></div>
+                    <h3>Framework Integration</h3>
+                    <p>Oh-My-Zsh, Oh-My-Bash, Starship, and Fisher support with proper configs</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plug2-icon lucide-plug-2"><path d="M9 2v6"/><path d="M15 2v6"/><path d="M12 17v5"/><path d="M5 8h14"/><path d="M6 11V8h12v3a6 6 0 1 1-12 0Z"/></svg></div>
+                    <h3>Editor Plugins</h3>
+                    <p>Curated plugin recommendations for Vim, Neovim, Emacs, and VS Code</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-cog-icon lucide-cog"><path d="M11 10.27 7 3.34"/><path d="m11 13.73-4 6.93"/><path d="M12 22v-2"/><path d="M12 2v2"/><path d="M14 12h8"/><path d="m17 20.66-1-1.73"/><path d="m17 3.34-1 1.73"/><path d="M2 12h2"/><path d="m20.66 17-1.73-1"/><path d="m20.66 7-1.73 1"/><path d="m3.34 17 1.73-1"/><path d="m3.34 7 1.73 1"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="12" r="8"/></svg></div>
+                    <h3>Shell Settings</h3>
+                    <p>Auto-correction, case-insensitive completion, history management, and more</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-import-icon lucide-import"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M8 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-4"/></svg></div>
+                    <h3>Import & Export</h3>
+                    <p>Import existing configs, share via URL, auto-save progress to localStorage</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lightbulb-icon lucide-lightbulb"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></div>
+                    <h3>Smart Defaults</h3>
+                    <p>Recommended aliases and settings pre-selected based on best practices</p>
+                </div>
+            </div>
+
+            <button class="btn btn-primary features-cta" onclick="app.hideFeatures(); app.startFresh();">Get Started →</button>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <span>Created in 2026 by <a href="https://robertfauver.com" target="_blank" rel="noopener noreferrer">Robert Fauver</a> | <a href="https://github.com/fauverism/terminal-tweaker">https://github.com/fauverism/terminal-tweaker</a></span>
+    </footer>
 
     <script src="app.js"></script>
 </body>
