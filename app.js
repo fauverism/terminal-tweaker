@@ -2241,6 +2241,31 @@ const app = {
 
     goHome() {
         this.showScreen('onboarding');
+    },
+
+    showFeatures() {
+        const modal = document.getElementById('features-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+
+            // Close on escape key
+            const escHandler = (e) => {
+                if (e.key === 'Escape') {
+                    this.hideFeatures();
+                    document.removeEventListener('keydown', escHandler);
+                }
+            };
+            document.addEventListener('keydown', escHandler);
+        }
+    },
+
+    hideFeatures() {
+        const modal = document.getElementById('features-modal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
     }
 };
 
